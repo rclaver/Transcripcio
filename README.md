@@ -1,2 +1,2 @@
-# Transcripcio
+# Transcripció
 Converteix àudio a text
