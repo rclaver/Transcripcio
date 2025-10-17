@@ -1,9 +1,9 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
+# -*- coding: UTF8 -*-
 """
-Creat: 16-10-2025
+@created: 17-10-2025
 @author: rafael
-@description: Converteix àudio a text
+@description: Converteix àudios a text a partir del conjunt de dades Mozilla Common Voice
 
 Instalació prèvia:
 sudo apt-get install python-tk
@@ -13,7 +13,6 @@ sudo pip install pygame pydub speechrecognition pyaudio
 import os, re
 import tkinter as tk
 from tkinter import filedialog, ttk
-#from tkinter import PhotoImage
 import pygame
 from pydub import AudioSegment
 import speech_recognition as sr
@@ -106,8 +105,7 @@ class AudioTranscriberApp:
       button_frame = ttk.Frame(main_frame)
       button_frame.grid(row=3, column=0, columnspan=3, pady=10)
 
-      #ico = PhotoImage(file='resources/audio32.png')
-      ttk.Button(button_frame, text="Reprodució", command=self.play_audio).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, text="Reprodució",command=self.play_audio).pack(side=tk.LEFT, padx=5)
       ttk.Button(button_frame, text="Aturar", command=self.stop_audio).pack(side=tk.LEFT, padx=5)
       ttk.Button(button_frame, text="Transcripció", command=self.start_transcription).pack(side=tk.LEFT, padx=15)
       ttk.Button(button_frame, text="Netejar", command=self.clear_all).pack(side=tk.LEFT, padx=5)
@@ -142,13 +140,12 @@ class AudioTranscriberApp:
       self.status_text.set(f"Idioma cambiat a: {selected_language_name}")
 
    def browse_file(self):
-      """Obre el cuadre de diàleg per seleccionar l'arxiu d'àudio"""
+      """Obre el cuadre de diàleg per seleccionar l'arxiu del conjunt de dades Mozilla Common Voice"""
       file_path = filedialog.askopenfilename(
-         title="Seleccionar l'arxiu d'àudio",
+         title="Selecciona l'arxiu del conjunt de dades Mozilla Common Voice",
          initialdir="/home/rafael/projectes",
          filetypes=[
-            ("Arxius MP3", "*.mp3"),
-            ("Arxius WAV", "*.wav"),
+            ("Arxius TSV", "*.tsv"),
             ("Tots els arxius", "*.*")
          ]
       )
@@ -290,13 +287,6 @@ class AudioTranscriberApp:
       if not text:
          self.status_text.set("Error: No hi ha text per desar")
          return
-
-      # Diàlog per definir la ruta i nom de l'arxiu a desar
-      #file_path = filedialog.asksaveasfilename(
-      #   title="Desar la transcripció",
-      #   defaultextension=".txt",
-      #   filetypes=[("Arxius de text", "*.txt"), ("Tots els arxius", "*.*")]
-      #)
 
       file_path = re.sub("\..{3}$", ".txt", self.audio_file_path.get())
 
