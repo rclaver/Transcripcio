@@ -22,7 +22,7 @@ import threading
 class AudioTranscriberApp:
    def __init__(self, root):
       self.root = root
-      self.root.title("Transcripció d'àudio a text")
+      self.root.title("Transcripció d'àudios del conjunt de dades Mozilla Common Voice")
       self.root.minsize(800, 680)
       self.selected_language = tk.StringVar(value="ca-ES")  # Idioma per defecte
 
@@ -30,7 +30,9 @@ class AudioTranscriberApp:
       pygame.mixer.init()
 
       # Variables
+      self.dataset_file_path = tk.StringVar()
       self.audio_file_path = tk.StringVar()
+      self.espera = True
       self.transcription_text = tk.StringVar()
       self.status_text = tk.StringVar(value="Preparat per començar")
 
@@ -57,20 +59,20 @@ class AudioTranscriberApp:
       title_label = ttk.Label(main_frame, text="Transcripció d'àudio a text", font=("Arial", 16, "bold"))
       title_label.grid(row=0, column=0, columnspan=3, pady=(0, 20))
 
-      # Selecció d'arxiu
-      ttk.Label(main_frame, text="Arxiu d'àudio:",font=("Arial",9,"bold")).grid(row=1, column=0, sticky=tk.W, pady=5)
+      # Selecció d'arxiu del dataset
+      ttk.Label(main_frame, text="dataset:",font=("Arial",9,"bold")).grid(row=1, column=0, sticky=tk.W, pady=5)
 
       file_frame = ttk.Frame(main_frame)
       file_frame.grid(row=1, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=5)
       file_frame.columnconfigure(0, weight=1)
 
-      self.file_entry = ttk.Entry(file_frame, textvariable=self.audio_file_path, state="readonly")
+      self.file_entry = ttk.Entry(file_frame, textvariable=self.dataset_file_path, state="readonly")
       self.file_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 5))
 
       ttk.Button(file_frame, text="Cercar arxiu",command=self.browse_file).grid(row=0, column=1)
 
       # Selector d'e 'idioma
-      ttk.Label(main_frame, text="Idioma de l'àudio:", font=("Arial",9,"bold")).grid(row=2, column=0, sticky=tk.W, pady=5)
+      ttk.Label(main_frame, text="Idioma àudios:", font=("Arial",9,"bold")).grid(row=2, column=0, sticky=tk.W, pady=5)
       language_frame = ttk.Frame(main_frame)
       language_frame.grid(row=2, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=5)
       language_frame.columnconfigure(0, weight=1)
@@ -85,30 +87,18 @@ class AudioTranscriberApp:
       self.language_combo.grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
       self.language_combo.set("Català")  # Valor per defecte
 
-      # Etiqueta que mostra el codi de l'idioma seleccionat
-      self.language_code_label = ttk.Label(
-         language_frame,
-         text=f"Codi: {self.languages['Català']}",
-         font=("Arial", 9),
-         foreground="red"
-      )
-      self.language_code_label.grid(row=0, column=1, sticky=tk.W)
-
       # Vincular l'event de canvi de selecció
       self.language_combo.bind('<<ComboboxSelected>>', self.on_language_change)
 
-      # Separador
-      #separator = ttk.Separator(main_frame, orient='horizontal')
-      #separator.grid(row=3, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=10)
-
       # Botons de control
       button_frame = ttk.Frame(main_frame)
-      button_frame.grid(row=3, column=0, columnspan=3, pady=10)
+      button_frame.grid(row=2, column=2, columnspan=3, pady=10)
 
-      ttk.Button(button_frame, text="Reprodució",command=self.play_audio).pack(side=tk.LEFT, padx=5)
-      ttk.Button(button_frame, text="Aturar", command=self.stop_audio).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, text="Inici",command=self.inicia_proces).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, text="reproduir",command=self.play_audio).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, text="aturar", command=self.stop_audio).pack(side=tk.LEFT, padx=5)
       ttk.Button(button_frame, text="Transcripció", command=self.start_transcription).pack(side=tk.LEFT, padx=15)
-      ttk.Button(button_frame, text="Netejar", command=self.clear_all).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, text="netejar", command=self.clear_all).pack(side=tk.LEFT, padx=5)
 
       # Àrea de text per a la transcripció
       ttk.Label(main_frame, text="Text transcrit:",font=("Arial",9,"bold")).grid(row=4, column=0, sticky=(tk.W, tk.N), pady=(10, 5))
@@ -151,17 +141,40 @@ class AudioTranscriberApp:
       )
 
       if file_path:
-         self.audio_file_path.set(file_path)
+         self.dataset_file_path.set(file_path)
          self.status_text.set(f"Arxiu seleccionat: {os.path.basename(file_path)} - Idioma: {self.language_combo.get()}")
+
+         # Executar en un fil separat per a no bloquejar l'interfase
+         thread = threading.Thread(target=self.processar_dataset)
+         thread.daemon = True
+         thread.start()
+
+   def processar_dataset(self):
+      file_path = self.dataset_file_path.get()
+      if file_path:
+         try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+               for line in file:
+                  # mira si transcription està buit
+                  if line.split("\t")[6] != "":
+                     self.audio_file_path = line.split("\t")[2]
+                     while self.espera:
+                        pass
+
+         except Exception as e:
+            self.status_text.set(f"Error llegint l'arxiu: {str(e)}")
+
+   def inicia_proces(self):
+      pass
 
    def play_audio(self):
       """Reprodueix l'arxiu d'àudio seleccionat"""
-      if not self.audio_file_path.get():
+      if not self.dataset_file_path.get():
          self.status_text.set("Error: No hi ha cap arxiu seleccionat")
          return
 
       try:
-         pygame.mixer.music.load(self.audio_file_path.get())
+         pygame.mixer.music.load(self.dataset_file_path.get())
          pygame.mixer.music.play()
          self.status_text.set(f"Reproduint àudio... [Idioma: {self.language_combo.get()}]")
       except Exception as e:
@@ -174,7 +187,7 @@ class AudioTranscriberApp:
 
    def start_transcription(self):
       """Inicia el procés de transcripció en un fil separat"""
-      if not self.audio_file_path.get():
+      if not self.dataset_file_path.get():
          self.status_text.set("Error: No hi ha cap arxiu seleccionat")
          return
 
@@ -192,7 +205,7 @@ class AudioTranscriberApp:
       """Converteix l'arxiu d'àudio a text utilitzant SpeechRecognition"""
       try:
          # Convertir MP3 a WAV si és necessari
-         audio_path = self.audio_file_path.get()
+         audio_path = self.dataset_file_path.get()
          if audio_path.lower().endswith('.mp3'):
             wav_path = audio_path.replace('.mp3', '_temp.wav')
             audio = AudioSegment.from_mp3(audio_path)
@@ -276,7 +289,7 @@ class AudioTranscriberApp:
 
    def clear_all(self):
       """Neteja tota l'interfase"""
-      self.audio_file_path.set("")
+      self.dataset_file_path.set("")
       self.text_area.delete(1.0, tk.END)
       self.stop_audio()
       self.status_text.set("Preparat per començar")
@@ -286,20 +299,23 @@ class AudioTranscriberApp:
       text = self.text_area.get(1.0, tk.END).strip()
       if not text:
          self.status_text.set("Error: No hi ha text per desar")
+         self.espera = False
          return
 
-      file_path = re.sub("\..{3}$", ".txt", self.audio_file_path.get())
+      file_path = re.sub("\..{3}$", ".txt", self.dataset_file_path.get())
 
       if file_path:
          try:
             with open(file_path, 'w', encoding='utf-8') as file:
                #current_language = self.language_combo.get()
                #file.write(f"Transcripció d'àudio - Idioma: {current_language}\n")
-               #file.write(f"Arxiu: {os.path.basename(self.audio_file_path.get())}\n")
+               #file.write(f"Arxiu: {os.path.basename(self.dataset_file_path.get())}\n")
                #file.write("=" * 50 + "\n\n")
                file.write(text)
             self.status_text.set(f"Transcripció desada a: {file_path}")
+            self.espera = False
          except Exception as e:
+            self.espera = False
             self.status_text.set(f"Error en desar: {str(e)}")
 
 
