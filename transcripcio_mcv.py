@@ -7,12 +7,15 @@
 
 Instalació prèvia:
 sudo apt-get install python-tk
+sudo apt-get install python3-pil python3-pil.imagetk
 sudo pip install pygame pydub speechrecognition pyaudio
 """
 
 import os, re
 import tkinter as tk
 from tkinter import filedialog, ttk
+from tkinter import PhotoImage
+from PIL import Image, ImageTk
 import pygame
 from pydub import AudioSegment
 import speech_recognition as sr
@@ -25,6 +28,9 @@ class AudioTranscriberApp:
       self.root.title("Transcripció d'àudios del conjunt de dades Mozilla Common Voice")
       self.root.minsize(800, 680)
       self.selected_language = tk.StringVar(value="ca-ES")  # Idioma per defecte
+      self.browse_initialdir = "/home/rafael/projectes/Transcripcio/resources/common-voice"
+      self.dir_imatges = "resources"
+      self.imatges = {}
 
       # Inicialitzar pygame per a la reproducció d'àudio
       pygame.mixer.init()
@@ -32,6 +38,7 @@ class AudioTranscriberApp:
       # Variables
       self.dataset_file_path = tk.StringVar()
       self.audio_file_path = tk.StringVar()
+      self.audio_file = tk.StringVar()
       self.espera = True
       self.transcription_text = tk.StringVar()
       self.status_text = tk.StringVar(value="Preparat per començar")
@@ -41,8 +48,18 @@ class AudioTranscriberApp:
          "Español": "es-ES",
          "English": "en-US"
       }
-
+      self.carrega_imatges()
       self.create_widgets()
+
+   def carrega_imatges(self):
+      #self.imatges = [ImageTk.PhotoImage(Image.open(os.path.join(self.dir_imatges, nom))) for nom in os.listdir(self.dir_imatges)]
+      self.imatges['forward'] = ImageTk.PhotoImage(Image.open(f"{self.dir_imatges}/forward.png"))
+      self.imatges['start'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/start.png"))
+      self.imatges['stop'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/stop.png"))
+      self.imatges['pause'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/pause.png"))
+      self.imatges['audiov'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/audiov.png"))
+      self.imatges['search'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/search.png"))
+
 
    def create_widgets(self):
       # Frame principal
@@ -69,9 +86,9 @@ class AudioTranscriberApp:
       self.file_entry = ttk.Entry(file_frame, textvariable=self.dataset_file_path, state="readonly")
       self.file_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 5))
 
-      ttk.Button(file_frame, text="Cercar arxiu",command=self.browse_file).grid(row=0, column=1)
+      ttk.Button(file_frame, image=self.imatges['search'], command=self.browse_file).grid(row=0, column=1)
 
-      # Selector d'e 'idioma
+      # Selector d'idioma
       ttk.Label(main_frame, text="Idioma àudios:", font=("Arial",9,"bold")).grid(row=2, column=0, sticky=tk.W, pady=5)
       language_frame = ttk.Frame(main_frame)
       language_frame.grid(row=2, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=5)
@@ -94,32 +111,37 @@ class AudioTranscriberApp:
       button_frame = ttk.Frame(main_frame)
       button_frame.grid(row=2, column=2, columnspan=3, pady=10)
 
-      ttk.Button(button_frame, text="Inici",command=self.inicia_proces).pack(side=tk.LEFT, padx=5)
-      ttk.Button(button_frame, text="reproduir",command=self.play_audio).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.imatges['forward'], command=self.seguent).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, text="reproduir", command=self.play_audio).pack(side=tk.LEFT, padx=5)
       ttk.Button(button_frame, text="aturar", command=self.stop_audio).pack(side=tk.LEFT, padx=5)
       ttk.Button(button_frame, text="Transcripció", command=self.start_transcription).pack(side=tk.LEFT, padx=15)
       ttk.Button(button_frame, text="netejar", command=self.clear_all).pack(side=tk.LEFT, padx=5)
 
+      # Etiqueta de l'àudio actualment seleccionat
+      ttk.Label(main_frame, text="àudio actiu:", font=("Arial",9,"bold")).grid(row=4, column=0, sticky=(tk.W, tk.N), pady=(0, 0))
+      audio_label = ttk.Label(main_frame, textvariable=self.audio_file, font=("Arial",10,"italic"))
+      audio_label.grid(row=4, column=1, columnspan=2, sticky=tk.W)
+
       # Àrea de text per a la transcripció
-      ttk.Label(main_frame, text="Text transcrit:",font=("Arial",9,"bold")).grid(row=4, column=0, sticky=(tk.W, tk.N), pady=(10, 5))
+      ttk.Label(main_frame, text="Text transcrit:",font=("Arial",9,"bold")).grid(row=5, column=0, sticky=(tk.W, tk.N), pady=(5, 5))
       self.text_area = tk.Text(main_frame, wrap=tk.WORD, width=80, height=20)
-      self.text_area.grid(row=4, column=1, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(10, 5))
+      self.text_area.grid(row=5, column=1, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(10, 5))
 
       # Scrollbar de l'àrea de text
       scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=self.text_area.yview)
-      scrollbar.grid(row=4, column=3, sticky=(tk.N, tk.S), pady=(10, 5))
+      scrollbar.grid(row=5, column=3, sticky=(tk.N, tk.S), pady=(10, 5))
       self.text_area.configure(yscrollcommand=scrollbar.set)
 
       # Barra de progrés
       self.progress = ttk.Progressbar(main_frame, mode='indeterminate')
-      self.progress.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=10)
+      self.progress.grid(row=6, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=10)
 
       # Estat
       status_label = ttk.Label(main_frame, textvariable=self.status_text, font=("Arial",9,"italic"))
-      status_label.grid(row=6, column=0, columnspan=3, sticky=tk.W)
+      status_label.grid(row=7, column=0, columnspan=3, sticky=tk.W)
 
       # Botó per desar la transcripció
-      ttk.Button(main_frame, text="Desar la Transcripció", command=self.save_transcription).grid(row=7, column=2, sticky=tk.E, pady=5)
+      ttk.Button(main_frame, text="Desar la Transcripció", command=self.save_transcription).grid(row=8, column=2, sticky=tk.E, pady=5)
 
    def on_language_change(self, event):
       """Actualitza l'etiqueta del codi d'idioma quan canvia la selecció"""
@@ -133,7 +155,7 @@ class AudioTranscriberApp:
       """Obre el cuadre de diàleg per seleccionar l'arxiu del conjunt de dades Mozilla Common Voice"""
       file_path = filedialog.askopenfilename(
          title="Selecciona l'arxiu del conjunt de dades Mozilla Common Voice",
-         initialdir="/home/rafael/projectes",
+         initialdir=self.browse_initialdir,
          filetypes=[
             ("Arxius TSV", "*.tsv"),
             ("Tots els arxius", "*.*")
@@ -142,7 +164,7 @@ class AudioTranscriberApp:
 
       if file_path:
          self.dataset_file_path.set(file_path)
-         self.status_text.set(f"Arxiu seleccionat: {os.path.basename(file_path)} - Idioma: {self.language_combo.get()}")
+         self.status_text.set(f"Arxiu del datset: {os.path.basename(file_path)} - Idioma: {self.language_combo.get()}")
 
          # Executar en un fil separat per a no bloquejar l'interfase
          thread = threading.Thread(target=self.processar_dataset)
@@ -153,28 +175,32 @@ class AudioTranscriberApp:
       file_path = self.dataset_file_path.get()
       if file_path:
          try:
+            fila = 0
             with open(file_path, 'r', encoding='utf-8') as file:
                for line in file:
+                  self.espera = True
+                  fila += 1
                   # mira si transcription està buit
-                  if line.split("\t")[6] != "":
-                     self.audio_file_path = line.split("\t")[2]
+                  if line.split("\t")[6] == "":
+                     self.audio_file_path = os.path.dirname(file_path) + "/audios/" + line.split("\t")[2]
+                     self.audio_file.set(self.audio_file_path)
                      while self.espera:
                         pass
 
          except Exception as e:
             self.status_text.set(f"Error llegint l'arxiu: {str(e)}")
 
-   def inicia_proces(self):
-      pass
+   def seguent(self):
+      self.espera = False
 
    def play_audio(self):
       """Reprodueix l'arxiu d'àudio seleccionat"""
-      if not self.dataset_file_path.get():
-         self.status_text.set("Error: No hi ha cap arxiu seleccionat")
+      if not self.audio_file_path:
+         self.status_text.set("Error: No hi ha cap arxiu d'àudio actiu")
          return
 
       try:
-         pygame.mixer.music.load(self.dataset_file_path.get())
+         pygame.mixer.music.load(self.audio_file_path)
          pygame.mixer.music.play()
          self.status_text.set(f"Reproduint àudio... [Idioma: {self.language_combo.get()}]")
       except Exception as e:
@@ -187,8 +213,8 @@ class AudioTranscriberApp:
 
    def start_transcription(self):
       """Inicia el procés de transcripció en un fil separat"""
-      if not self.dataset_file_path.get():
-         self.status_text.set("Error: No hi ha cap arxiu seleccionat")
+      if not self.audio_file_path:
+         self.status_text.set("Error: No hi ha cap arxiu d'àudio actiu")
          return
 
       # Deshabilitar botons durant la transcripció
@@ -205,7 +231,7 @@ class AudioTranscriberApp:
       """Converteix l'arxiu d'àudio a text utilitzant SpeechRecognition"""
       try:
          # Convertir MP3 a WAV si és necessari
-         audio_path = self.dataset_file_path.get()
+         audio_path = self.audio_file_path
          if audio_path.lower().endswith('.mp3'):
             wav_path = audio_path.replace('.mp3', '_temp.wav')
             audio = AudioSegment.from_mp3(audio_path)
