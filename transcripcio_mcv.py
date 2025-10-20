@@ -14,8 +14,6 @@ sudo pip install pygame pydub speechrecognition pyaudio
 import os, re
 import tkinter as tk
 from tkinter import filedialog, ttk
-from tkinter import PhotoImage
-from PIL import Image, ImageTk
 import pygame
 from pydub import AudioSegment
 import speech_recognition as sr
@@ -53,12 +51,12 @@ class AudioTranscriberApp:
 
    def carrega_imatges(self):
       #self.imatges = [ImageTk.PhotoImage(Image.open(os.path.join(self.dir_imatges, nom))) for nom in os.listdir(self.dir_imatges)]
-      self.imatges['forward'] = ImageTk.PhotoImage(Image.open(f"{self.dir_imatges}/forward.png"))
-      self.imatges['start'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/start.png"))
-      self.imatges['stop'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/stop.png"))
-      self.imatges['pause'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/pause.png"))
-      self.imatges['audiov'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/audiov.png"))
-      self.imatges['search'] = tk.PhotoImage(Image.open(f"{self.dir_imatges}/search.png"))
+      self.imatges['search'] = tk.PhotoImage(file=f"{self.dir_imatges}/search.png")
+      self.imatges['forward'] = tk.PhotoImage(file=f"{self.dir_imatges}/forward.png")
+      self.imatges['reproduccio'] = tk.PhotoImage(file=f"{self.dir_imatges}/sound.png")
+      self.imatges['stop'] = tk.PhotoImage(file=f"{self.dir_imatges}/stop.png")
+      self.imatges['transcripcio'] = tk.PhotoImage(file=f"{self.dir_imatges}/transcripcio.png")
+      self.imatges['desar'] = tk.PhotoImage(file=f"{self.dir_imatges}/save.png")
 
 
    def create_widgets(self):
@@ -73,25 +71,24 @@ class AudioTranscriberApp:
       main_frame.rowconfigure(4, weight=1)
 
       # Títol
-      title_label = ttk.Label(main_frame, text="Transcripció d'àudio a text", font=("Arial", 16, "bold"))
-      title_label.grid(row=0, column=0, columnspan=3, pady=(0, 20))
+      ttk.Label(main_frame, text="Transcripció d'àudio a text", font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=3, pady=(0, 10))
 
       # Selecció d'arxiu del dataset
-      ttk.Label(main_frame, text="dataset:",font=("Arial",9,"bold")).grid(row=1, column=0, sticky=tk.W, pady=5)
+      ttk.Label(main_frame, text="Selecció del dataset:",font=("Arial",9,"bold")).grid(row=1, column=0, sticky=tk.W, pady=5)
 
       file_frame = ttk.Frame(main_frame)
       file_frame.grid(row=1, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=5)
       file_frame.columnconfigure(0, weight=1)
 
       self.file_entry = ttk.Entry(file_frame, textvariable=self.dataset_file_path, state="readonly")
-      self.file_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 5))
+      self.file_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 20))
 
       ttk.Button(file_frame, image=self.imatges['search'], command=self.browse_file).grid(row=0, column=1)
 
       # Selector d'idioma
-      ttk.Label(main_frame, text="Idioma àudios:", font=("Arial",9,"bold")).grid(row=2, column=0, sticky=tk.W, pady=5)
+      ttk.Label(main_frame, text="Idioma àudios:", font=("Arial",9,"bold")).grid(row=2, column=0, sticky=tk.W, pady=0)
       language_frame = ttk.Frame(main_frame)
-      language_frame.grid(row=2, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+      language_frame.grid(row=2, column=1, columnspan=1, sticky=(tk.W, tk.E), pady=0)
       language_frame.columnconfigure(0, weight=1)
 
       # Combobox per seleccionar idioma
@@ -99,7 +96,7 @@ class AudioTranscriberApp:
          language_frame,
          values=list(self.languages.keys()),
          state="readonly",
-         width=20
+         width=14
       )
       self.language_combo.grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
       self.language_combo.set("Català")  # Valor per defecte
@@ -107,41 +104,40 @@ class AudioTranscriberApp:
       # Vincular l'event de canvi de selecció
       self.language_combo.bind('<<ComboboxSelected>>', self.on_language_change)
 
-      # Botons de control
-      button_frame = ttk.Frame(main_frame)
-      button_frame.grid(row=2, column=2, columnspan=3, pady=10)
-
-      ttk.Button(button_frame, image=self.imatges['forward'], command=self.seguent).pack(side=tk.LEFT, padx=5)
-      ttk.Button(button_frame, text="reproduir", command=self.play_audio).pack(side=tk.LEFT, padx=5)
-      ttk.Button(button_frame, text="aturar", command=self.stop_audio).pack(side=tk.LEFT, padx=5)
-      ttk.Button(button_frame, text="Transcripció", command=self.start_transcription).pack(side=tk.LEFT, padx=15)
-      ttk.Button(button_frame, text="netejar", command=self.clear_all).pack(side=tk.LEFT, padx=5)
-
       # Etiqueta de l'àudio actualment seleccionat
-      ttk.Label(main_frame, text="àudio actiu:", font=("Arial",9,"bold")).grid(row=4, column=0, sticky=(tk.W, tk.N), pady=(0, 0))
+      ttk.Label(main_frame, text="àudio actiu:", font=("Arial",9,"bold")).grid(row=2, column=2, sticky=(tk.W, tk.N), pady=(0, 0))
       audio_label = ttk.Label(main_frame, textvariable=self.audio_file, font=("Arial",10,"italic"))
-      audio_label.grid(row=4, column=1, columnspan=2, sticky=tk.W)
+      audio_label.grid(row=2, column=3, columnspan=2, sticky=tk.W)
 
       # Àrea de text per a la transcripció
-      ttk.Label(main_frame, text="Text transcrit:",font=("Arial",9,"bold")).grid(row=5, column=0, sticky=(tk.W, tk.N), pady=(5, 5))
+      ttk.Label(main_frame, text="Text transcrit:",font=("Arial",9,"bold")).grid(row=3, column=0, sticky=(tk.W, tk.N), pady=(5, 5))
       self.text_area = tk.Text(main_frame, wrap=tk.WORD, width=80, height=20)
-      self.text_area.grid(row=5, column=1, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(10, 5))
+      self.text_area.grid(row=3, column=1, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(5, 5))
 
       # Scrollbar de l'àrea de text
       scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=self.text_area.yview)
-      scrollbar.grid(row=5, column=3, sticky=(tk.N, tk.S), pady=(10, 5))
+      scrollbar.grid(row=3, column=3, sticky=(tk.N, tk.S), pady=(5, 5))
       self.text_area.configure(yscrollcommand=scrollbar.set)
+
+      # Botons de control
+      button_frame = ttk.Frame(main_frame)
+      button_frame.grid(row=4, column=2, columnspan=3, pady=10)
+
+      ttk.Button(button_frame, image=self.imatges['forward'], command=self.seguent).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.imatges['reproduccio'], command=self.play_audio).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.imatges['stop'], command=self.stop_audio).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.imatges['transcripcio'], command=self.start_transcription).pack(side=tk.LEFT, padx=15)
+      ttk.Button(button_frame, image=self.imatges['stop'], command=self.clear_all).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.imatges['desar'], command=self.save_transcription).pack(side=tk.LEFT, padx=5)
 
       # Barra de progrés
       self.progress = ttk.Progressbar(main_frame, mode='indeterminate')
-      self.progress.grid(row=6, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=10)
+      self.progress.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=0)
 
       # Estat
       status_label = ttk.Label(main_frame, textvariable=self.status_text, font=("Arial",9,"italic"))
-      status_label.grid(row=7, column=0, columnspan=3, sticky=tk.W)
+      status_label.grid(row=6, column=0, columnspan=3, sticky=tk.W)
 
-      # Botó per desar la transcripció
-      ttk.Button(main_frame, text="Desar la Transcripció", command=self.save_transcription).grid(row=8, column=2, sticky=tk.E, pady=5)
 
    def on_language_change(self, event):
       """Actualitza l'etiqueta del codi d'idioma quan canvia la selecció"""
