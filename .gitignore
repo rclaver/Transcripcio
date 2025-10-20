@@ -4,6 +4,8 @@ __pycache__/
 .htaccess
 .env
 *.pyc
+*.mp3
+*.wav
 .venv
 .spyproject
 .flaskenv
