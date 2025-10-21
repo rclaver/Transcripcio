@@ -24,40 +24,44 @@ class AudioTranscriberApp:
    def __init__(self, root):
       self.root = root
       self.root.title("Transcripció d'àudios del conjunt de dades Mozilla Common Voice")
-      self.root.minsize(800, 680)
-      self.selected_language = tk.StringVar(value="ca-ES")  # Idioma per defecte
-      self.browse_initialdir = "/home/rafael/projectes/Transcripcio/resources/common-voice"
-      self.dir_imatges = "resources"
-      self.imatges = {}
-
-      # Inicialitzar pygame per a la reproducció d'àudio
-      pygame.mixer.init()
+      self.root.minsize(800, 600)
 
       # Variables
       self.dataset_file_path = tk.StringVar()
       self.audio_file_path = tk.StringVar()
       self.audio_file = tk.StringVar()
-      self.espera = True
       self.transcription_text = tk.StringVar()
-      self.status_text = tk.StringVar(value="Preparat per començar")
-
+      self.selected_language = tk.StringVar(value="ca-ES")  # Idioma per defecte
+      self.browse_initialdir = "/home/rafael/projectes/Transcripcio/resources/common-voice"
+      self.dir_imatges = "resources"
+      self.imatges = {}
+      self.atrib_genere = tk.StringVar()
+      self.registre = tk.StringVar()
+      self.fila = 0
+      self.espera = True
+      self.default_state = "Selecciona el conjunt de dades de Mozilla Common Voice"
+      self.status_text = tk.StringVar(value=self.default_state)
       self.languages = {
          "Català": "ca-ES",
          "Español": "es-ES",
          "English": "en-US"
       }
+
+      # Inicialitzar pygame per a la reproducció d'àudio
+      pygame.mixer.init()
+
       self.carrega_imatges()
       self.create_widgets()
 
    def carrega_imatges(self):
       #self.imatges = [ImageTk.PhotoImage(Image.open(os.path.join(self.dir_imatges, nom))) for nom in os.listdir(self.dir_imatges)]
       self.imatges['search'] = tk.PhotoImage(file=f"{self.dir_imatges}/search.png")
-      self.imatges['forward'] = tk.PhotoImage(file=f"{self.dir_imatges}/forward.png")
+      self.imatges['següent'] = tk.PhotoImage(file=f"{self.dir_imatges}/next.png")
       self.imatges['reproduccio'] = tk.PhotoImage(file=f"{self.dir_imatges}/sound.png")
       self.imatges['stop'] = tk.PhotoImage(file=f"{self.dir_imatges}/stop.png")
       self.imatges['transcripcio'] = tk.PhotoImage(file=f"{self.dir_imatges}/transcripcio.png")
+      self.imatges['neteja'] = tk.PhotoImage(file=f"{self.dir_imatges}/neteja.png")
       self.imatges['desar'] = tk.PhotoImage(file=f"{self.dir_imatges}/save.png")
-
 
    def create_widgets(self):
       # Frame principal
@@ -77,18 +81,18 @@ class AudioTranscriberApp:
       ttk.Label(main_frame, text="Selecció del dataset:",font=("Arial",9,"bold")).grid(row=1, column=0, sticky=tk.W, pady=5)
 
       file_frame = ttk.Frame(main_frame)
-      file_frame.grid(row=1, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+      file_frame.grid(row=1, column=1, columnspan=4, sticky=(tk.W, tk.E), pady=5)
       file_frame.columnconfigure(0, weight=1)
 
-      self.file_entry = ttk.Entry(file_frame, textvariable=self.dataset_file_path, state="readonly")
+      self.file_entry = ttk.Entry(file_frame, textvariable=self.dataset_file_path, font=("Arial",9), state="readonly")
       self.file_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 20))
 
-      ttk.Button(file_frame, image=self.imatges['search'], command=self.browse_file).grid(row=0, column=1)
+      ttk.Button(file_frame, image=self.imatges['search'], command=self.browse_file).grid(row=0, column=3)
 
       # Selector d'idioma
-      ttk.Label(main_frame, text="Idioma àudios:", font=("Arial",9,"bold")).grid(row=2, column=0, sticky=tk.W, pady=0)
+      ttk.Label(main_frame, text="Idioma àudios:", font=("Arial",9,"bold")).grid(row=2, column=0, sticky=(tk.N,tk.W), pady=(5,15))
       language_frame = ttk.Frame(main_frame)
-      language_frame.grid(row=2, column=1, columnspan=1, sticky=(tk.W, tk.E), pady=0)
+      language_frame.grid(row=2, column=1, sticky=(tk.N,tk.W), pady=(5,15))
       language_frame.columnconfigure(0, weight=1)
 
       # Combobox per seleccionar idioma
@@ -96,7 +100,8 @@ class AudioTranscriberApp:
          language_frame,
          values=list(self.languages.keys()),
          state="readonly",
-         width=14
+         font=("Arial",9),
+         width=12
       )
       self.language_combo.grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
       self.language_combo.set("Català")  # Valor per defecte
@@ -105,38 +110,44 @@ class AudioTranscriberApp:
       self.language_combo.bind('<<ComboboxSelected>>', self.on_language_change)
 
       # Etiqueta de l'àudio actualment seleccionat
-      ttk.Label(main_frame, text="àudio actiu:", font=("Arial",9,"bold")).grid(row=2, column=2, sticky=(tk.W, tk.N), pady=(0, 0))
-      audio_label = ttk.Label(main_frame, textvariable=self.audio_file, font=("Arial",10,"italic"))
-      audio_label.grid(row=2, column=3, columnspan=2, sticky=tk.W)
+      ttk.Label(main_frame, text="àudio actiu:", font=("Arial",9,"bold")).grid(row=2, column=2, sticky=(tk.N,tk.W), pady=(5,15))
+      audio_label = ttk.Label(main_frame, textvariable=self.audio_file, font=("Arial",9,"italic"))
+      audio_label.grid(row=2, column=3, sticky=(tk.N,tk.W), pady=(5,15))
 
       # Àrea de text per a la transcripció
-      ttk.Label(main_frame, text="Text transcrit:",font=("Arial",9,"bold")).grid(row=3, column=0, sticky=(tk.W, tk.N), pady=(5, 5))
+      ttk.Label(main_frame, text="Text transcrit:",font=("Arial",9,"bold")).grid(row=3, column=0, sticky=(tk.W, tk.N), pady=(5, 0))
       self.text_area = tk.Text(main_frame, wrap=tk.WORD, width=80, height=20)
-      self.text_area.grid(row=3, column=1, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(5, 5))
+      self.text_area.grid(row=3, column=1, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(5, 0))
 
       # Scrollbar de l'àrea de text
       scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=self.text_area.yview)
-      scrollbar.grid(row=3, column=3, sticky=(tk.N, tk.S), pady=(5, 5))
+      scrollbar.grid(row=3, column=5, sticky=(tk.N, tk.S), pady=(5, 0))
       self.text_area.configure(yscrollcommand=scrollbar.set)
+
+      # Àrea de atributs de la veu
+      ttk.Label(main_frame, text="Atributs de l'àudio", font=("Arial",9,"bold")).grid(row=4, column=0, sticky=(tk.N,tk.W), pady=15)
+      atrib_frame = ttk.Frame(main_frame)
+      atrib_frame.grid(row=4, column=1, sticky=(tk.N,tk.W), pady=15)
+      tk.Radiobutton(atrib_frame, text="home", font=("Arial",9), variable=self.atrib_genere, value="home").grid(row=0, column=0, sticky=tk.W)
+      tk.Radiobutton(atrib_frame, text="dona", font=("Arial",9), variable=self.atrib_genere, value="dona").grid(row=1, column=0, sticky=tk.W)
 
       # Botons de control
       button_frame = ttk.Frame(main_frame)
-      button_frame.grid(row=4, column=2, columnspan=3, pady=10)
+      button_frame.grid(row=4, column=2, columnspan=3, sticky=tk.N, pady=15)
 
-      ttk.Button(button_frame, image=self.imatges['forward'], command=self.seguent).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.imatges['següent'], text="següent", command=self.seguent).pack(side=tk.LEFT, padx=5)
       ttk.Button(button_frame, image=self.imatges['reproduccio'], command=self.play_audio).pack(side=tk.LEFT, padx=5)
       ttk.Button(button_frame, image=self.imatges['stop'], command=self.stop_audio).pack(side=tk.LEFT, padx=5)
       ttk.Button(button_frame, image=self.imatges['transcripcio'], command=self.start_transcription).pack(side=tk.LEFT, padx=15)
-      ttk.Button(button_frame, image=self.imatges['stop'], command=self.clear_all).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.imatges['neteja'], command=self.clear_all).pack(side=tk.LEFT, padx=5)
       ttk.Button(button_frame, image=self.imatges['desar'], command=self.save_transcription).pack(side=tk.LEFT, padx=5)
 
       # Barra de progrés
       self.progress = ttk.Progressbar(main_frame, mode='indeterminate')
-      self.progress.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=0)
+      self.progress.grid(row=5, column=0, columnspan=5, sticky=(tk.N, tk.W, tk.E), pady=0)
 
       # Estat
-      status_label = ttk.Label(main_frame, textvariable=self.status_text, font=("Arial",9,"italic"))
-      status_label.grid(row=6, column=0, columnspan=3, sticky=tk.W)
+      ttk.Label(main_frame, textvariable=self.status_text, font=("Arial",9,"italic")).grid(row=6, column=0, columnspan=5, sticky=(tk.N,tk.W))
 
 
    def on_language_change(self, event):
@@ -160,7 +171,7 @@ class AudioTranscriberApp:
 
       if file_path:
          self.dataset_file_path.set(file_path)
-         self.status_text.set(f"Arxiu del datset: {os.path.basename(file_path)} - Idioma: {self.language_combo.get()}")
+         self.status_text.set(f"Arxiu del conjunt de dades: {os.path.basename(file_path)} - Idioma: {self.language_combo.get()}")
 
          # Executar en un fil separat per a no bloquejar l'interfase
          thread = threading.Thread(target=self.processar_dataset)
@@ -171,23 +182,41 @@ class AudioTranscriberApp:
       file_path = self.dataset_file_path.get()
       if file_path:
          try:
-            fila = 0
             with open(file_path, 'r', encoding='utf-8') as file:
-               for line in file:
+               for self.registre in file:
+                  self.fila += 1
+                  if self.fila == 1: continue
                   self.espera = True
-                  fila += 1
                   # mira si transcription està buit
-                  if line.split("\t")[6] == "":
-                     self.audio_file_path = os.path.dirname(file_path) + "/audios/" + line.split("\t")[2]
-                     self.audio_file.set(self.audio_file_path)
-                     while self.espera:
-                        pass
+                  transcripcio = self.registre.split("\t")[6]
+                  if transcripcio is None or not transcripcio or not transcripcio.strip():
+                     arxiu = self.registre.split("\t")[2]
+                     self.audio_file_path = os.path.dirname(file_path) + "/audios/" + arxiu
+                     self.audio_file.set(arxiu)
+                  else:
+                     self.text_area.insert(1.0, transcripcio)
+
+                  while self.espera:
+                     pass
 
          except Exception as e:
             self.status_text.set(f"Error llegint l'arxiu: {str(e)}")
 
    def seguent(self):
-      self.espera = False
+      text = self.text_area.get(1.0, tk.END).strip()
+      if text:
+         nou_registre = self.registre.split("\t")
+         nou_registre[6] = text
+         if not nou_registre[9] and not self.atrib_genere:
+            nou_registre[9] = self.atrib_genere
+            #Ahora hay que guardar (append) el registro en un nuevo archivo
+            self.espera = False
+         else:
+            self.status_text.set("No has seleccionat l'atribut de gènere de l'àudio")
+      else:
+         #
+         pass
+
 
    def play_audio(self):
       """Reprodueix l'arxiu d'àudio seleccionat"""
@@ -314,10 +343,27 @@ class AudioTranscriberApp:
       self.dataset_file_path.set("")
       self.text_area.delete(1.0, tk.END)
       self.stop_audio()
-      self.status_text.set("Preparat per començar")
+      self.status_text.set(self.default_state)
 
    def save_transcription(self):
-      """Guarda la transcripció en un arxiu de text"""
+      """Desa el registre en l'arxiu de sortida"""
+      text = self.registre
+      try:
+         with open(file_path, 'w', encoding='utf-8') as file:
+            #current_language = self.language_combo.get()
+            #file.write(f"Transcripció d'àudio - Idioma: {current_language}\n")
+            #file.write(f"Arxiu: {os.path.basename(self.dataset_file_path.get())}\n")
+            #file.write("=" * 50 + "\n\n")
+            file.write(text)
+         self.status_text.set(f"Transcripció desada a: {file_path}")
+         self.espera = False
+      except Exception as e:
+         self.espera = False
+         self.status_text.set(f"Error en desar: {str(e)}")
+
+
+   def save_olly_transcription(self):
+      """Desa la transcripció en un arxiu de text"""
       text = self.text_area.get(1.0, tk.END).strip()
       if not text:
          self.status_text.set("Error: No hi ha text per desar")
