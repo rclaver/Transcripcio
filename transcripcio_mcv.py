@@ -20,7 +20,7 @@ import speech_recognition as sr
 import threading
 
 
-class AudioTranscriberApp:
+class AudioTranscriber:
    def __init__(self, root):
       self.root = root
       self.root.title("Transcripció d'àudios del conjunt de dades Mozilla Common Voice")
@@ -37,9 +37,9 @@ class AudioTranscriberApp:
       self.browse_initialdir = f"{self.base_dir}/{self.dir_resources}/common-voice"
       self.cfg_file = f"{self.base_dir}/{self.dir_resources}/transcripcio.cfg"
       self.images = {}
-      self.attr_sex = tk.StringVar()
+      self.attr_gender = tk.StringVar()
       self.registre = tk.StringVar()
-      self.nou_registre = tk.StringVar()
+      self.nou_registre = None
       self.old_file = None
       self.fila = 0
       self.espera = True
@@ -70,6 +70,16 @@ class AudioTranscriberApp:
 
          except Exception as e:
             self.status_text.set(f"Error en llegir l'arxiu de configuració: {str(e)}")
+
+   def desa_configuracio(self):
+      if self.cfg_file:
+         try:
+            cfg = "{" + "'line':" + self.fila + ",'file':'" + self.audio_file_path +"'}"
+            with open(self.cfg_file, 'w', encoding='utf-8') as file:
+               file.write(cfg)
+
+         except Exception as e:
+            self.status_text.set(f"Error en escriure l'arxiu de configuració: {str(e)}")
 
    def carrega_imatges(self):
       #self.images = [ImageTk.PhotoImage(Image.open(os.path.join(self.dir_resources, nom))) for nom in os.listdir(self.dir_resources)]
@@ -146,8 +156,8 @@ class AudioTranscriberApp:
       ttk.Label(main_frame, text="Atributs de l'àudio", font=("Arial",9,"bold")).grid(row=4, column=0, sticky=(tk.N,tk.W), pady=15)
       atrib_frame = ttk.Frame(main_frame)
       atrib_frame.grid(row=4, column=1, sticky=(tk.N,tk.W), pady=15)
-      tk.Radiobutton(atrib_frame, text="home", font=("Arial",9), variable=self.attr_sex, value="home").grid(row=0, column=0, sticky=tk.W)
-      tk.Radiobutton(atrib_frame, text="dona", font=("Arial",9), variable=self.attr_sex, value="dona").grid(row=1, column=0, sticky=tk.W)
+      tk.Radiobutton(atrib_frame, text="home", font=("Arial",9), variable=self.attr_gender, value="home").grid(row=0, column=0, sticky=tk.W)
+      tk.Radiobutton(atrib_frame, text="dona", font=("Arial",9), variable=self.attr_gender, value="dona").grid(row=1, column=0, sticky=tk.W)
 
       # Botons de control
       button_frame = ttk.Frame(main_frame)
@@ -228,20 +238,20 @@ class AudioTranscriberApp:
    def next_audio(self):
       text = self.text_area.get(1.0, tk.END).strip()
       if text:
-         if self.actualitza_registre(self.registre, text):
+         if self.genera_registre(self.registre, text):
             #Ahora hay que guardar (append) el registro en un nuevo archivo
-            self.save_transcription(self.nou_registre.get().join("\t"))
+            self.save_transcription(self.list_to_csv(self.nou_registre))
             self.espera = False
       else:
          # desbloquea el bucle para pasar al siguiente registro
          self.espera = False
 
-   def actualitza_registre(self, reg, text):
+   def genera_registre(self, reg, text):
       self.nou_registre = reg.split("\t")
       self.nou_registre[6] = text
       if not self.nou_registre[9]:
-         if self.attr_sex:
-            self.nou_registre[9] = self.attr_sex
+         if self.attr_gender:
+            self.nou_registre[9] = self.normalize_sex(self.attr_gender)
          else:
             self.status_text.set("No has seleccionat l'atribut de gènere de l'àudio")
             return False
@@ -332,6 +342,11 @@ class AudioTranscriberApp:
 
       self.status_text.set(status)
 
+   def normalize_sex(self):
+      match self.attr_gender:
+         case "home": return "male_masculine"
+         case "dona": return "female_feminine"
+
    def toggle_buttons_state(self, enabled):
       """Habilita o deshabilita botons durant la transcripció"""
       # En una implementació real, aquí es deshabilitarien els botons
@@ -342,7 +357,7 @@ class AudioTranscriberApp:
       """Neteja tota l'interfase"""
       self.dataset_file_path.set("")
       self.text_area.delete(1.0, tk.END)
-      self.nou_registre.set(None)
+      self.nou_registre = None
       self.stop_audio()
       self.status_text.set(self.default_state)
 
@@ -350,16 +365,17 @@ class AudioTranscriberApp:
       """Desa el registre en l'arxiu de sortida"""
       if not nou_registre:
          text = self.text_area.get(1.0, tk.END).strip()
-         if self.actualitza_registre(self.registre, text):
-            nou_registre = self.list_to_csv(self.nou_registre.join)
+         if self.genera_registre(self.registre, text):
+            nou_registre = self.list_to_csv(self.nou_registre)
 
       if nou_registre:
          file_path = self.dataset_file_path.get().replace("-corpus-", "-reported-audios-")
 
          try:
             with open(file_path, 'a', encoding='utf-8') as file:
-               file.write(self.nou_registre)
+               file.write(nou_registre)
             self.status_text.set(f"Transcripció desada a: {file_path}")
+            self.desa_configuracio
             self.espera = False
          except Exception as e:
             self.status_text.set(f"Error en desar: {str(e)}")
@@ -391,7 +407,7 @@ class AudioTranscriberApp:
 
 def main():
    root = tk.Tk()
-   AudioTranscriberApp(root)
+   AudioTranscriber(root)
    root.mainloop()
 
 if __name__ == "__main__":
