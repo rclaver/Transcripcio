@@ -32,11 +32,15 @@ class AudioTranscriberApp:
       self.audio_file = tk.StringVar()
       self.transcription_text = tk.StringVar()
       self.selected_language = tk.StringVar(value="ca-ES")  # Idioma per defecte
-      self.browse_initialdir = "/home/rafael/projectes/Transcripcio/resources/common-voice"
-      self.dir_imatges = "resources"
-      self.imatges = {}
-      self.atrib_genere = tk.StringVar()
+      self.base_dir = "/home/rafael/projectes/Transcripcio"
+      self.dir_resources = "resources"
+      self.browse_initialdir = f"{self.base_dir}/{self.dir_resources}/common-voice"
+      self.cfg_file = f"{self.base_dir}/{self.dir_resources}/transcripcio.cfg"
+      self.images = {}
+      self.attr_sex = tk.StringVar()
       self.registre = tk.StringVar()
+      self.nou_registre = tk.StringVar()
+      self.old_file = None
       self.fila = 0
       self.espera = True
       self.default_state = "Selecciona el conjunt de dades de Mozilla Common Voice"
@@ -50,18 +54,32 @@ class AudioTranscriberApp:
       # Inicialitzar pygame per a la reproducció d'àudio
       pygame.mixer.init()
 
+      self.carrega_configuracio()
       self.carrega_imatges()
       self.create_widgets()
 
+   def carrega_configuracio(self):
+      if self.cfg_file:
+         try:
+            with open(self.cfg_file, 'r', encoding='utf-8') as file:
+               reg = file.readline().strip("{}").split(",")
+            for e in reg:
+               match e[0]:
+                  case "line": self.fila = e[1]-1
+                  case "file": self.old_file = e[1]
+
+         except Exception as e:
+            self.status_text.set(f"Error en llegir l'arxiu de configuració: {str(e)}")
+
    def carrega_imatges(self):
-      #self.imatges = [ImageTk.PhotoImage(Image.open(os.path.join(self.dir_imatges, nom))) for nom in os.listdir(self.dir_imatges)]
-      self.imatges['search'] = tk.PhotoImage(file=f"{self.dir_imatges}/search.png")
-      self.imatges['següent'] = tk.PhotoImage(file=f"{self.dir_imatges}/next.png")
-      self.imatges['reproduccio'] = tk.PhotoImage(file=f"{self.dir_imatges}/sound.png")
-      self.imatges['stop'] = tk.PhotoImage(file=f"{self.dir_imatges}/stop.png")
-      self.imatges['transcripcio'] = tk.PhotoImage(file=f"{self.dir_imatges}/transcripcio.png")
-      self.imatges['neteja'] = tk.PhotoImage(file=f"{self.dir_imatges}/neteja.png")
-      self.imatges['desar'] = tk.PhotoImage(file=f"{self.dir_imatges}/save.png")
+      #self.images = [ImageTk.PhotoImage(Image.open(os.path.join(self.dir_resources, nom))) for nom in os.listdir(self.dir_resources)]
+      self.images['search'] = tk.PhotoImage(file=f"{self.dir_resources}/search.png")
+      self.images['next'] = tk.PhotoImage(file=f"{self.dir_resources}/next.png")
+      self.images['reproduccio'] = tk.PhotoImage(file=f"{self.dir_resources}/play_audio.png")
+      self.images['stop'] = tk.PhotoImage(file=f"{self.dir_resources}/stop.png")
+      self.images['transcripcio'] = tk.PhotoImage(file=f"{self.dir_resources}/transcripcio.png")
+      self.images['neteja'] = tk.PhotoImage(file=f"{self.dir_resources}/neteja.png")
+      self.images['desar'] = tk.PhotoImage(file=f"{self.dir_resources}/save.png")
 
    def create_widgets(self):
       # Frame principal
@@ -87,7 +105,7 @@ class AudioTranscriberApp:
       self.file_entry = ttk.Entry(file_frame, textvariable=self.dataset_file_path, font=("Arial",9), state="readonly")
       self.file_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 20))
 
-      ttk.Button(file_frame, image=self.imatges['search'], command=self.browse_file).grid(row=0, column=3)
+      ttk.Button(file_frame, image=self.images['search'], command=self.browse_file).grid(row=0, column=3)
 
       # Selector d'idioma
       ttk.Label(main_frame, text="Idioma àudios:", font=("Arial",9,"bold")).grid(row=2, column=0, sticky=(tk.N,tk.W), pady=(5,15))
@@ -128,19 +146,19 @@ class AudioTranscriberApp:
       ttk.Label(main_frame, text="Atributs de l'àudio", font=("Arial",9,"bold")).grid(row=4, column=0, sticky=(tk.N,tk.W), pady=15)
       atrib_frame = ttk.Frame(main_frame)
       atrib_frame.grid(row=4, column=1, sticky=(tk.N,tk.W), pady=15)
-      tk.Radiobutton(atrib_frame, text="home", font=("Arial",9), variable=self.atrib_genere, value="home").grid(row=0, column=0, sticky=tk.W)
-      tk.Radiobutton(atrib_frame, text="dona", font=("Arial",9), variable=self.atrib_genere, value="dona").grid(row=1, column=0, sticky=tk.W)
+      tk.Radiobutton(atrib_frame, text="home", font=("Arial",9), variable=self.attr_sex, value="home").grid(row=0, column=0, sticky=tk.W)
+      tk.Radiobutton(atrib_frame, text="dona", font=("Arial",9), variable=self.attr_sex, value="dona").grid(row=1, column=0, sticky=tk.W)
 
       # Botons de control
       button_frame = ttk.Frame(main_frame)
       button_frame.grid(row=4, column=2, columnspan=3, sticky=tk.N, pady=15)
 
-      ttk.Button(button_frame, image=self.imatges['següent'], text="següent", command=self.seguent).pack(side=tk.LEFT, padx=5)
-      ttk.Button(button_frame, image=self.imatges['reproduccio'], command=self.play_audio).pack(side=tk.LEFT, padx=5)
-      ttk.Button(button_frame, image=self.imatges['stop'], command=self.stop_audio).pack(side=tk.LEFT, padx=5)
-      ttk.Button(button_frame, image=self.imatges['transcripcio'], command=self.start_transcription).pack(side=tk.LEFT, padx=15)
-      ttk.Button(button_frame, image=self.imatges['neteja'], command=self.clear_all).pack(side=tk.LEFT, padx=5)
-      ttk.Button(button_frame, image=self.imatges['desar'], command=self.save_transcription).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.images['next'], command=self.next_audio).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.images['reproduccio'], command=self.play_audio).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.images['stop'], command=self.stop_audio).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.images['transcripcio'], command=self.start_transcription).pack(side=tk.LEFT, padx=15)
+      ttk.Button(button_frame, image=self.images['neteja'], command=self.clear_all).pack(side=tk.LEFT, padx=5)
+      ttk.Button(button_frame, image=self.images['desar'], command=self.save_transcription).pack(side=tk.LEFT, padx=5)
 
       # Barra de progrés
       self.progress = ttk.Progressbar(main_frame, mode='indeterminate')
@@ -173,6 +191,10 @@ class AudioTranscriberApp:
          self.dataset_file_path.set(file_path)
          self.status_text.set(f"Arxiu del conjunt de dades: {os.path.basename(file_path)} - Idioma: {self.language_combo.get()}")
 
+         # verificació de la recuperació de l'estat anterior (últim registre processat)
+         if not self.old_file or self.dataset_file_path.get() != self.old_file:
+            self.fila = 0
+
          # Executar en un fil separat per a no bloquejar l'interfase
          thread = threading.Thread(target=self.processar_dataset)
          thread.daemon = True
@@ -185,15 +207,16 @@ class AudioTranscriberApp:
             with open(file_path, 'r', encoding='utf-8') as file:
                for self.registre in file:
                   self.fila += 1
-                  if self.fila == 1: continue
+                  if self.fila == 1:
+                     continue
+
                   self.espera = True
                   # mira si transcription està buit
                   transcripcio = self.registre.split("\t")[6]
-                  if transcripcio is None or not transcripcio or not transcripcio.strip():
-                     arxiu = self.registre.split("\t")[2]
-                     self.audio_file_path = os.path.dirname(file_path) + "/audios/" + arxiu
-                     self.audio_file.set(arxiu)
-                  else:
+                  arxiu = self.registre.split("\t")[2]
+                  self.audio_file_path = os.path.dirname(file_path) + "/audios/" + arxiu
+                  self.audio_file.set(arxiu)
+                  if transcripcio:
                      self.text_area.insert(1.0, transcripcio)
 
                   while self.espera:
@@ -202,21 +225,27 @@ class AudioTranscriberApp:
          except Exception as e:
             self.status_text.set(f"Error llegint l'arxiu: {str(e)}")
 
-   def seguent(self):
+   def next_audio(self):
       text = self.text_area.get(1.0, tk.END).strip()
       if text:
-         nou_registre = self.registre.split("\t")
-         nou_registre[6] = text
-         if not nou_registre[9] and not self.atrib_genere:
-            nou_registre[9] = self.atrib_genere
+         if self.actualitza_registre(self.registre, text):
             #Ahora hay que guardar (append) el registro en un nuevo archivo
+            self.save_transcription(self.nou_registre.get().join("\t"))
             self.espera = False
+      else:
+         # desbloquea el bucle para pasar al siguiente registro
+         self.espera = False
+
+   def actualitza_registre(self, reg, text):
+      self.nou_registre = reg.split("\t")
+      self.nou_registre[6] = text
+      if not self.nou_registre[9]:
+         if self.attr_sex:
+            self.nou_registre[9] = self.attr_sex
          else:
             self.status_text.set("No has seleccionat l'atribut de gènere de l'àudio")
-      else:
-         #
-         pass
-
+            return False
+      return True
 
    def play_audio(self):
       """Reprodueix l'arxiu d'àudio seleccionat"""
@@ -309,60 +338,38 @@ class AudioTranscriberApp:
       # Per simplificar, només actualizem l'estat
       pass
 
-   '''
-   def detect_language(self, audio_path):
-      """Intenta detectar l'idioma de làudio automàticament"""
-      try:
-         # Convertir a WAV si cal
-         if audio_path.lower().endswith('.mp3'):
-            wav_path = audio_path.replace('.mp3', '_temp.wav')
-            audio = AudioSegment.from_mp3(audio_path)
-            audio.export(wav_path, format="wav")
-         else:
-            wav_path = audio_path
-
-         recognizer = sr.Recognizer()
-
-         with sr.AudioFile(wav_path) as source:
-            audio_data = recognizer.record(source, duration=10)  # Solo primeros 10 segundos
-
-         # Intentar detectar con idioma auto
-         language_code = self.selected_language.get()
-         text = recognizer.recognize_google(audio_data, language=language_code)
-
-         # Aquí podrías agregar lógica per a detectar el idioma basado en el texto
-         # Por simplicidad, retornamos el idioma detectado o por defecto
-         return language_code
-
-      except:
-         return self.selected_language.get()  # Idioma por defecto si no se puede detectar
-   '''
-
    def clear_all(self):
       """Neteja tota l'interfase"""
       self.dataset_file_path.set("")
       self.text_area.delete(1.0, tk.END)
+      self.nou_registre.set(None)
       self.stop_audio()
       self.status_text.set(self.default_state)
 
-   def save_transcription(self):
+   def save_transcription(self, nou_registre=None):
       """Desa el registre en l'arxiu de sortida"""
-      text = self.registre
-      try:
-         with open(file_path, 'w', encoding='utf-8') as file:
-            #current_language = self.language_combo.get()
-            #file.write(f"Transcripció d'àudio - Idioma: {current_language}\n")
-            #file.write(f"Arxiu: {os.path.basename(self.dataset_file_path.get())}\n")
-            #file.write("=" * 50 + "\n\n")
-            file.write(text)
-         self.status_text.set(f"Transcripció desada a: {file_path}")
-         self.espera = False
-      except Exception as e:
-         self.espera = False
-         self.status_text.set(f"Error en desar: {str(e)}")
+      if not nou_registre:
+         text = self.text_area.get(1.0, tk.END).strip()
+         if self.actualitza_registre(self.registre, text):
+            nou_registre = self.list_to_csv(self.nou_registre.join)
 
+      if nou_registre:
+         file_path = self.dataset_file_path.get().replace("-corpus-", "-reported-audios-")
 
-   def save_olly_transcription(self):
+         try:
+            with open(file_path, 'a', encoding='utf-8') as file:
+               file.write(self.nou_registre)
+            self.status_text.set(f"Transcripció desada a: {file_path}")
+            self.espera = False
+         except Exception as e:
+            self.status_text.set(f"Error en desar: {str(e)}")
+      else:
+         self.status_text.set("no hi ha text")
+
+   def list_to_csv(self, reg):
+      return '\t'.join(str(x) for x in reg)
+
+   def save_only_transcription(self):
       """Desa la transcripció en un arxiu de text"""
       text = self.text_area.get(1.0, tk.END).strip()
       if not text:
@@ -375,15 +382,10 @@ class AudioTranscriberApp:
       if file_path:
          try:
             with open(file_path, 'w', encoding='utf-8') as file:
-               #current_language = self.language_combo.get()
-               #file.write(f"Transcripció d'àudio - Idioma: {current_language}\n")
-               #file.write(f"Arxiu: {os.path.basename(self.dataset_file_path.get())}\n")
-               #file.write("=" * 50 + "\n\n")
                file.write(text)
             self.status_text.set(f"Transcripció desada a: {file_path}")
             self.espera = False
          except Exception as e:
-            self.espera = False
             self.status_text.set(f"Error en desar: {str(e)}")
 
 
