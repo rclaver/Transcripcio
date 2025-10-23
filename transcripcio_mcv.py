@@ -30,11 +30,13 @@ class AudioTranscriber:
       self.dataset_file_path = tk.StringVar()
       self.audio_file_path = tk.StringVar()
       self.audio_file = tk.StringVar()
+      self.audio_actiu = tk.StringVar()
       self.transcription_text = tk.StringVar()
       self.selected_language = tk.StringVar(value="ca-ES")  # Idioma per defecte
       self.base_dir = "/home/rafael/projectes/Transcripcio"
       self.dir_resources = "resources"
       self.browse_initialdir = f"{self.base_dir}/{self.dir_resources}/common-voice"
+      #arxiu de configuració: conté les dades de la darrera execució
       self.cfg_file = f"{self.base_dir}/{self.dir_resources}/transcripcio.cfg"
       self.images = {}
       self.attr_gender = tk.StringVar()
@@ -58,30 +60,6 @@ class AudioTranscriber:
       self.carrega_configuracio()
       self.carrega_imatges()
       self.create_widgets()
-
-   def carrega_configuracio(self):
-      if self.cfg_file:
-         try:
-            with open(self.cfg_file, 'r', encoding='utf-8') as file:
-               reg = file.readline().strip("{}").split(",")
-            for e in reg:
-               match e[0]:
-                  case "line": self.fila = e[1]-1
-                  case "file": self.old_file = e[1]
-
-         except IOError as e:
-            if (e.errno != 2):
-               self.status_text.set(f"Error en llegir l'arxiu de configuració: {str(e)}")
-
-   def desa_configuracio(self):
-      if self.cfg_file:
-         try:
-            cfg = "{" + "'line':" + self.fila + ",'file':'" + self.audio_file_path +"'}"
-            with open(self.cfg_file, 'w', encoding='utf-8') as file:
-               file.write(cfg)
-
-         except Exception as e:
-            self.status_text.set(f"Error en escriure l'arxiu de configuració: {str(e)}")
 
    def carrega_imatges(self):
       #self.images = [ImageTk.PhotoImage(Image.open(os.path.join(self.dir_resources, nom))) for nom in os.listdir(self.dir_resources)]
@@ -141,8 +119,8 @@ class AudioTranscriber:
       self.language_combo.bind('<<ComboboxSelected>>', self.on_language_change)
 
       # Etiqueta de l'àudio actualment seleccionat
-      ttk.Label(main_frame, text="àudio actiu:", font=("Arial",9,"bold")).grid(row=2, column=2, sticky=(tk.N,tk.W), pady=(5,15))
-      audio_label = ttk.Label(main_frame, textvariable=self.audio_file, font=("Arial",9,"italic"))
+      ttk.Label(main_frame, text="àudio actiu:", font=("Arial",9,"bold")).grid(row=2, column=2, sticky=(tk.N,tk.E), pady=(5,15))
+      audio_label = ttk.Label(main_frame, textvariable=self.audio_actiu, font=("Arial",9,"italic"))
       audio_label.grid(row=2, column=3, sticky=(tk.N,tk.W), pady=(5,15))
 
       # Àrea de text per a la transcripció
@@ -230,6 +208,7 @@ class AudioTranscriber:
                   arxiu = self.registre.split("\t")[2]
                   self.audio_file_path = os.path.dirname(file_path) + "/audios/" + arxiu
                   self.audio_file.set(arxiu)
+                  self.audio_actiu.set("("+str(self.fila)+") "+self.audio_file.get())
                   self.text_area.delete(1.0, tk.END)
                   self.text_area.insert(1.0, transcripcio)
 
@@ -239,16 +218,18 @@ class AudioTranscriber:
          except Exception as e:
             self.status_text.set(f"Error llegint l'arxiu: {str(e)}")
 
+   """
+   Permet saltar a l'àudio següent. Prèviament desa, si existeix, el registre actual
+   """
    def next_audio(self):
       text = self.text_area.get(1.0, tk.END).strip()
       if text:
          if self.genera_registre(self.registre, text):
             #Ahora hay que guardar (append) el registro en un nuevo archivo
             self.save_record(self.list_to_csv(self.nou_registre))
-            self.espera = False
-      else:
-         # desbloquea el bucle para pasar al siguiente registro
-         self.espera = False
+
+      # desbloquea el bucle para pasar al siguiente registro
+      self.espera = False
 
    def genera_registre(self, reg, text):
       self.nou_registre = reg.split("\t")
@@ -292,7 +273,9 @@ class AudioTranscriber:
       """Atura la reproducció d'àudio"""
       pygame.mixer.music.stop()
       self.is_playing = False
-      self.status_text.set("Àudio aturat")
+      self.progress.stop()
+      self.toggle_buttons_state(True)
+      self.status_text.set("Àudio finalitzat")
 
    def start_transcription(self):
       """Inicia el procés de transcripció en un fil separat"""
@@ -397,7 +380,7 @@ class AudioTranscriber:
             self.desa_configuracio()
             self.espera = False
          except Exception as e:
-            self.status_text.set(f"Error en desar: {str(e)}")
+            self.status_text.set(f"Error en desar el registre: {str(e)}")
       else:
          self.status_text.set("no hi ha text")
 
@@ -422,6 +405,36 @@ class AudioTranscriber:
             self.espera = False
          except Exception as e:
             self.status_text.set(f"Error en desar: {str(e)}")
+
+   """
+   Llegeix de l'arxiu de configuració les dades de la darrera execució:
+   - la ruta de l'arxiu del conjunt de dades
+   - la darrera línia precessada de l'arxiu del conjunt de dades
+   """
+   def carrega_configuracio(self):
+      try:
+         with open(self.cfg_file, 'r', encoding='utf-8') as file:
+            reg = file.readline().strip("{}").split(",")
+         for e in reg:
+            match e[0]:
+               case "line": self.fila = e[1]-1
+               case "file": self.old_file = e[1]
+      except IOError as e:
+         if (e.errno != 2): #file not found
+            self.status_text.set(f"Error en llegir l'arxiu de configuració: {str(e)}")
+
+   """
+   Desa a l'arxiu de configuració les dades de la darrera execució:
+   - la ruta de l'arxiu del conjunt de dades
+   - la darrera línia precessada de l'arxiu del conjunt de dades
+   """
+   def desa_configuracio(self):
+      try:
+         cfg = "{" + "'line':" + str(self.fila) + ",'file':'" + self.dataset_file_path.get() +"'}"
+         with open(self.cfg_file, 'w', encoding='utf-8') as file:
+            file.write(cfg)
+      except Exception as e:
+         self.status_text.set(f"Error en escriure l'arxiu de configuració: {str(e)}")
 
 def main():
    root = tk.Tk()
