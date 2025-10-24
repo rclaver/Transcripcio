@@ -8,7 +8,7 @@
 Instalació prèvia:
 sudo apt-get install python-tk
 sudo apt-get install python3-pil python3-pil.imagetk
-sudo pip install pygame pydub speechrecognition pyaudio
+pip install --user pygame pydub speechrecognition pyaudio
 """
 
 import os, re
@@ -34,10 +34,10 @@ class AudioTranscriber:
       self.transcription_text = tk.StringVar()
       self.selected_language = tk.StringVar(value="ca-ES")  # Idioma per defecte
       self.base_dir = "/home/rafael/projectes/Transcripcio"
-      self.dir_resources = "resources"
-      self.browse_initialdir = f"{self.base_dir}/{self.dir_resources}/common-voice"
+      self.dir_images = "static/img"
+      self.browse_initialdir = f"{self.base_dir}/common-voice"
       #arxiu de configuració: conté les dades de la darrera execució
-      self.cfg_file = f"{self.base_dir}/{self.dir_resources}/transcripcio.cfg"
+      self.cfg_file = f"{self.base_dir}/transcripcio.cfg"
       self.images = {}
       self.attr_gender = tk.StringVar()
       self.registre = tk.StringVar()
@@ -62,15 +62,15 @@ class AudioTranscriber:
       self.create_widgets()
 
    def carrega_imatges(self):
-      #self.images = [ImageTk.PhotoImage(Image.open(os.path.join(self.dir_resources, nom))) for nom in os.listdir(self.dir_resources)]
-      self.images['search'] = tk.PhotoImage(file=f"{self.dir_resources}/search.png")
-      self.images['next'] = tk.PhotoImage(file=f"{self.dir_resources}/next.png")
-      self.images['reproduccio'] = tk.PhotoImage(file=f"{self.dir_resources}/play_audio.png")
-      self.images['stop'] = tk.PhotoImage(file=f"{self.dir_resources}/stop.png")
-      self.images['transcripcio'] = tk.PhotoImage(file=f"{self.dir_resources}/transcripcio.png")
-      self.images['clear'] = tk.PhotoImage(file=f"{self.dir_resources}/clear.png")
-      self.images['save'] = tk.PhotoImage(file=f"{self.dir_resources}/save.png")
-      self.images['exit'] = tk.PhotoImage(file=f"{self.dir_resources}/exit.png")
+      #self.images = [ImageTk.PhotoImage(Image.open(os.path.join(self.dir_images, nom))) for nom in os.listdir(self.dir_images)]
+      self.images['search'] = tk.PhotoImage(file=f"{self.dir_images}/search.png")
+      self.images['next'] = tk.PhotoImage(file=f"{self.dir_images}/next.png")
+      self.images['reproduccio'] = tk.PhotoImage(file=f"{self.dir_images}/play_audio.png")
+      self.images['stop'] = tk.PhotoImage(file=f"{self.dir_images}/stop.png")
+      self.images['transcripcio'] = tk.PhotoImage(file=f"{self.dir_images}/transcripcio.png")
+      self.images['clear'] = tk.PhotoImage(file=f"{self.dir_images}/clear.png")
+      self.images['save'] = tk.PhotoImage(file=f"{self.dir_images}/save.png")
+      self.images['exit'] = tk.PhotoImage(file=f"{self.dir_images}/exit.png")
 
    def create_widgets(self):
       # Frame principal

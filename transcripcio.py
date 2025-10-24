@@ -7,7 +7,7 @@ Creat: 16-10-2025
 
 Instalació prèvia:
 sudo apt-get install python-tk
-sudo pip install pygame pydub speechrecognition pyaudio
+pip install --user pygame pydub speechrecognition pyaudio
 """
 
 import os, re
