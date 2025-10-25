@@ -15,7 +15,7 @@
     <div class="contenidor">
       <div class="titol">Transcripció d'àudios d'un conjunt de dades Mozilla Common Voice</div>
       <div class="bloc">
-        <form method="POST" action="/transcripcio" enctype="multipart/form-data">
+        <form method="post" action="/transcripcio" enctype="multipart/form-data">
           <label for="id_arxiu">Selecciona l'arxiu del dataset <img src="../static/img/folder.png"></label>
           <input type="file" id="id_arxiu" name="arxiu" accept=".txt,.tsv,.csv" required>
           <button type="submit">Acceptar</button>
@@ -23,7 +23,7 @@
       </div>
 
       <div class="bloc">
-        <form id="formulari" class="formulari" method="post" onClick="formulari();" action="apuntador">
+        <form id="form_idioma" method="post" action="/transcripcio" onClick="formulari();">
           <div id="div_seleccio_idioma">
             <span>Selecció d'idioma {{idioma}}: </span>
             <select name="seleccio_idioma" id="seleccio_idioma">

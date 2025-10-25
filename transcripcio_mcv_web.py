@@ -11,31 +11,37 @@ pip install -r requirements.txt
 pip install --user pygame pydub speechrecognition pyaudio
 """
 
-import os, re
-import threading
+import os, threading
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 import pygame
 from pydub import AudioSegment
 import speech_recognition as sr
 
-# Variables
+# -----------------
+# variables globals
+#
+C_NONE="\033[0m"
+CB_YLW="\033[1;33m"
+CB_BLU="\033[1;34m"
+
+base_dir = "/home/rafael/projectes/Transcripcio"
+dir_static = "static"
+dir_templates = "templates"
+#arxiu de configuració: conté les dades de la darrera execució
+cfg_file = f"{base_dir}/transcripcio.cfg"
+
 dataset_file_path = ""
 audio_file_path = ""
 audio_file = ""
 audio_actiu = ""
 transcription_text = ""
 selected_language = "ca-ES"  # Idioma per defecte
-base_dir = "/home/rafael/projectes/Transcripcio"
-dir_resources = "resources"
-browse_initialdir = f"{base_dir}/{dir_resources}/common-voice"
-#arxiu de configuració: conté les dades de la darrera execució
-cfg_file = f"{base_dir}/{dir_resources}/transcripcio.cfg"
-images = {}
 attr_gender = ""
 registre = ""
 nou_registre = None
 old_file = None
+#linia actual de l'arxiu del conjunt de dades mcv
 line = 0
 espera = True
 is_playing = False
@@ -48,6 +54,10 @@ languages = {
 }
 
 # Auxiliary functions
+""" Converteix una llista en un string separat per tabulador """
+def list_to_tsv(reg):
+   return '\t'.join(str(x) for x in reg)
+
 """
 Llegeix de l'arxiu de configuració les dades de la darrera execució:
 - la ruta de l'arxiu del conjunt de dades
@@ -244,14 +254,14 @@ def crear_app():
          text = recognizer.recognize_google(audio_data, language=f"{selected_language.get()}")
 
          # Actualitzar l'interfase en el fil principal
-         root.after(0, update_transcription, text, f"Transcripció [{language_combo.get()}] completada amb éxit")
+         update_transcription(text, "Transcripció completada amb éxit")
 
       except sr.UnknownValueError:
-         root.after(0, update_transcription, "", f"Error: No he pogut entendre l'àudio [{language_combo.get()}]")
+         update_transcription("", "Error: No he pogut entendre l'àudio")
       except sr.RequestError as e:
-         root.after(0, update_transcription, "", f"Error en el servei: {str(e)}")
+         update_transcription("", f"Error en el servei: {str(e)}")
       except Exception as e:
-         root.after(0, update_transcription, "", f"Error inesperat: {str(e)}")
+         update_transcription("", f"Error inesperat: {str(e)}")
       finally:
          # Eliminar, si existeix, l'arxiu temporal
          if audio_path.lower().endswith('.mp3') and os.path.exists(wav_path):
@@ -310,8 +320,24 @@ def crear_app():
          status_text.set("no hi ha text")
 
    """
-   def list_to_csv(reg):
-      return '\t'.join(str(x) for x in reg)
+
+
+   # Esdeveniment que es dispara quan un client es connecta
+   @socketio.on('connect')
+   def handle_connect():
+       print(f"{CB_YLW}Client connectat{C_NONE}")
+
+   # Iniciamos la lectura del archivo en un hilo separado para no bloquear el servidor
+   @socketio.on('inici')
+   def handle_start():
+       global fil, estat, stop, en_pausa
+       print(f"{CB_YLW}botó inici{C_NONE}")
+       estat = "inici"
+       stop = False
+       en_pausa = False
+       if not fil or not fil.is_alive():
+          fil = threading.Thread(target=principal)
+          fil.start()
 
 
    return app
