@@ -33,6 +33,10 @@ div .bloc {
 .div_intern {
   display: block;
 }
+input[type='file'] {
+   opacity: 0;
+}
+
 form label,
 form button {
   background-color: #cccccc;
@@ -47,7 +51,6 @@ form button:hover {
   background-color: #442222;
   color: white;
 }
-
 form label:active,
 form button:active {
   background-color: #662222;
@@ -56,18 +59,18 @@ form button:active {
 textarea {
   autocomplete: off;
 }
+.transcripcio {
+  margin-bottom: 10px;
+  min-height: 300px;
+  text-align: left;
+  background-color: #f0f8ffA0;
+}
 .error {
   /*display: none;
   visibility: hidden;*/
   margin-bottom: 5px;
   text-align: left;
   color: red;
-}
-.escena {
-  margin-bottom: 10px;
-  min-height: 400px;
-  text-align: left;
-  background-color: #f0f8ffA0;
 }
 div#div_formulari {
   display: block;
@@ -84,16 +87,18 @@ div#div_seleccio_escenes {
   padding: 10px;
 }
 .text {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: normal;
 }
 .div_botons {
-  margin-top: 40px;
+  display: block;
+  margin-top: 20px;
+  width: 90%;
+  text-align: right;
 }
 .imatge {
-  width: 48px;
-  padding-left: 14px;
-  padding-right: 14px;
+  width: 32px;
+  margin-left: 14px;
 }
 .invisible {
   width: 1px;
