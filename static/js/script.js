@@ -1,5 +1,7 @@
 function formulari() {
-   var error, s_idioma, i;
+   var s_idioma, i;
+   var input = document.querySelector("input");
+   document.getElementById("arxiu_actual").innerHTML = input.files;
    s_idioma = document.getElementById("seleccio_idioma");
    i = s_idioma.selectedIndex;
    idioma = s_idioma.options[i].value;
@@ -8,13 +10,32 @@ function formulari() {
    form.submit();
 }
 
+function updateFileNameDisplay() {
+  const curFiles = input.files;
+  if (curFiles.length != 0) {
+    document.getElementById("arxiu_actual").innerHTML = curFiles;
+  }
+}
+
+function seleccioIdioma() {
+   var s_idioma, i;
+   var input = document.querySelector("input");
+   document.getElementById("arxiu_actual").innerHTML = input.files[0].name;
+   s_idioma = document.getElementById("seleccio_idioma");
+   i = s_idioma.selectedIndex;
+   idioma = s_idioma.options[i].value;
+   form = document.getElementById("formulari");
+   form.value = idioma;
+}
+
 /* --------------------------------
 const input = document.querySelector("input");
 const preview = document.querySelector(".preview");
 
 input.style.opacity = 0;
-input.addEventListener("change", updateImageDisplay);
-function updateImageDisplay() {
+input.addEventListener("change", updateFileNameDisplay);
+
+function updateFileNameDisplay() {
   while (preview.firstChild) {
     preview.removeChild(preview.firstChild);
   }

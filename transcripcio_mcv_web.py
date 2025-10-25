@@ -160,7 +160,7 @@ def crear_app():
       if text:
          if genera_registre(registre, text):
             #Ahora hay que guardar (append) el registro en un nuevo archivo
-            save_record(list_to_csv(nou_registre))
+            save_record(list_to_tsv(nou_registre))
 
       # desbloquea el bucle para pasar al siguiente registro
       espera = False
@@ -303,7 +303,7 @@ def crear_app():
       if not nou_registre:
          text = text_area.get(1.0, tk.END).strip()
          if genera_registre(registre, text):
-            nou_registre = list_to_csv(nou_registre)
+            nou_registre = list_to_tsv(nou_registre)
 
       if nou_registre:
          file_path = dataset_file_path.get().replace("-corpus-", "-reported-audios-")
@@ -336,7 +336,7 @@ def crear_app():
        stop = False
        en_pausa = False
        if not fil or not fil.is_alive():
-          fil = threading.Thread(target=principal)
+          fil = threading.Thread(target=processar_dataset)
           fil.start()
 
 
