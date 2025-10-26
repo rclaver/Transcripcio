@@ -1,6 +1,6 @@
 var idioma, arxiu;
 var resposta = document.getElementById("arxiu_actual");
-document.getElementById("id_arxiu").addEventListener("change", seleccioArxiu);
+document.getElementById("id_arxiu_dataset").addEventListener("change", seleccioArxiu);
 document.getElementById("id_seleccio_idioma").addEventListener("change", seleccioIdioma);
 
 function seleccioArxiu() {

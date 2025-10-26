@@ -68,23 +68,16 @@ textarea {
 .error {
   /*display: none;
   visibility: hidden;*/
+  margin-left: 10px;
   margin-bottom: 5px;
   text-align: left;
+  font-size: 12pt;
+  font-style: italic;
   color: red;
 }
 div#div_formulari {
   display: block;
   margin: 4px auto;
-}
-div#div_seleccio_escenes {
-  margin: 0 auto;
-  overflow: hidden;
-  width: 50%;
-  text-align: center;
-}
-#seleccio_escenes {
-  font-size: 20px;
-  padding: 10px;
 }
 .text {
   font-size: 14px;

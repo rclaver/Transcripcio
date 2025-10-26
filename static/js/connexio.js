@@ -1,0 +1,33 @@
+/***
+ Gestiona la comunicació entre el servidor i el client
+*/
+var estat;
+var boto = "next";
+
+// Connectar-se al servidor WebSocket
+const socket = io.connect("http://" + document.domain + ":" + location.port);
+
+// Esdeveniment que es dispara quan el servidor envia una nova línia
+socket.on('new_line', function(data) {
+   estat = (data.estat) ? data.estat : "";
+   document.getElementById("area_transcripcio").innerText = data.frase;
+   document.getElementById("div_error").innerText = (data.error) ? data.error : "";
+});
+
+socket.on('new_transcription', function(data) {
+   document.getElementById("area_transcripcio").innerText = data.text;
+   document.getElementById("div_error").innerText = (data.error) ? data.error : "";
+});
+
+document.getElementById('bt_next').onclick = function() {
+   socket.emit('next');
+};
+document.getElementById('bt_play_audio').onclick = function() {
+   socket.emit('play_audio');
+};
+document.getElementById('bt_stop').onclick = function() {
+   socket.emit('stop');
+};
+document.getElementById('bt_transcripcio').onclick = function() {
+   socket.emit('transcripcio');
+};
