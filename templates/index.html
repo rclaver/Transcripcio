@@ -7,7 +7,6 @@
   <title>audio transcription MCV dataset</title>
   <link rel="icon" type="image/x-icon" href="../static/img/favicon.ico" />
   <link rel="stylesheet" type="text/css" href="../static/css/estils.css" />
-  <script src="../static/js/script.js"></script>
 </head>
 
 <body bgcolor="#FFFFFF">
@@ -15,22 +14,22 @@
     <div class="contenidor">
       <div class="titol">Transcripció d'àudios d'un conjunt de dades Mozilla Common Voice</div>
 
-      <form id="formulari" method="post" action="index.html" enctype="multipart/form-data" onBlur="formulari();">
-        <div class="bloc">
-          <label for="id_arxiu">Selecciona l'arxiu del dataset <img src="../static/img/folder.png"></label>
-          <input type="file" id="id_arxiu" name="arxiu" accept="text/csv" required>
-          <button type="submit">Acceptar</button>
-        </div>
-
+      <form id="id_formulari" method="post" action="index.html" enctype="multipart/form-data" onBlur="Q_formulari();">
         <div class="bloc">
           <div id="div_seleccio_idioma">
             <span>Selecció d'idioma: </span>
-            <select name="seleccio_idioma" id="seleccio_idioma" onChange="seleccioIdioma();">
+            <select name="seleccio_idioma" id="id_seleccio_idioma" onChange="Q_seleccioIdioma();">
               <option value="ca-ES">Català</option>
               <option value="es-ES">Español</option>
               <option value="en-US">English</option>
             </select>
           </div>
+        </div>
+
+        <div class="bloc">
+          <label for="id_arxiu">Selecciona l'arxiu del dataset <img src="../static/img/folder.png"></label>
+          <input type="file" id="id_arxiu" name="arxiu" accept="text/csv,.tsv" required>
+          <!--button type="submit">Acceptar</button-->
         </div>
       </form>
 
@@ -55,15 +54,17 @@
     </div>
   </div>
 
+<script src="../static/js/script.js"></script>
+
 <!--script>
 function seleccioIdioma() {
    var s_idioma, i;
    var input = document.querySelector("input");
    document.getElementById("arxiu_actual").innerHTML = input.files;
-   s_idioma = document.getElementById("seleccio_idioma");
+   s_idioma = document.getElementById("id_seleccio_idioma");
    i = s_idioma.selectedIndex;
    idioma = s_idioma.options[i].value;
-   form = document.getElementById("formulari");
+   form = document.getElementById("id_formulari");
    form.value = idioma;
 }
 </script-->

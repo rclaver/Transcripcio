@@ -1,5 +1,4 @@
 {% include "head.tpl" %}
-  <script src="/static/js/script.js"></script>
 </head>
 
 <body bgcolor="#FFFFFF">
@@ -7,18 +6,10 @@
     <div class="contenidor">
       <div class="titol">Transcripció d'àudios d'un conjunt de dades Mozilla Common Voice</div>
       <div class="bloc">
-        <form method="POST" action="/transcripcio" enctype="multipart/form-data">
-          <label for="id_arxiu">Selecciona l'arxiu del dataset</label>
-          <input type="file" id="id_arxiu" name="arxiu" accept=".txt,.tsv,.csv" required>
-          <button type="submit">Acceptar</button>
-        </form>
-      </div>
-
-      <div class="bloc">
-        <form id="formulari" class="formulari" method="post" onClick="formulari();" action="apuntador">
+        <form id="id_formulari" class="formulari" method="post" onClick="Q_formulari();" action="transcripcio">
           <div id="div_seleccio_idioma">
             <span>Selecció d'idioma {{idioma}}: </span>
-            <select name="seleccio_idioma" id="seleccio_idioma">
+            <select name="seleccio_idioma" id="id_seleccio_idioma">
               <option value="ca-ES">Català</option>
               <option value="es-ES">Español</option>
               <option value="en-US">English</option>
@@ -27,7 +18,15 @@
         </form>
       </div>
 
-      <div id="arxiu_actual">arxiu</div>
+      <div class="bloc">
+        <form method="POST" action="transcripcio" enctype="multipart/form-data">
+          <label for="id_arxiu">Selecciona l'arxiu del dataset</label>
+          <input type="file" id="id_arxiu" name="arxiu" accept="text/csv,.tsv" required>
+          <!--button type="submit">Acceptar</button-->
+        </form>
+      </div>
+
+      <div id="arxiu_actual">Selecciona un arxiu del conjunt de dades</div>
       <!--div id="transcripcio" class="bloc transcripcio text"></div-->
 
       <div class="bloc">
@@ -41,15 +40,16 @@
         <img id="bt_transcripcio" class="imatge" src="{{url_for('static', filename='img/transcripcio.png')}}" title="start audio transcription">
         <img id="bt_clear" class="imatge" src="{{url_for('static', filename='img/clear.png')}}" title="clear all items">
       </div>
-      <img id="bt_gravacio" class="invisible" src="{{url_for('static', filename='img/web-gravacio.png')}}">
+      <img id="bt_save" class="invisible" src="{{url_for('static', filename='img/save.png')}}">
       <audio id="audio" autoplay="autoplay" preload="none" type="audio/wav"></audio>
       <div id="div_error" class="error text"></div>
 
     </div>
   </div>
 
-<script>
+<script src="/static/js/script.js"></script>
+<!--script>
   const input = document.querySelector("input");
   //input.style.opacity = 0;
-</script>
+</script-->
 </body>
