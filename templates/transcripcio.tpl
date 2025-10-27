@@ -35,5 +35,10 @@
     </div>
   </div>
 
-   <script src="/static/js/connexio.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      socket.emit('start');
+    });
+  </script>
+  <script src="/static/js/connexio.js"></script>
 </body>

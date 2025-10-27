@@ -20,7 +20,8 @@ socket.on('new_transcription', function(data) {
 });
 
 document.getElementById('bt_next').onclick = function() {
-   socket.emit('next');
+   var text = document.getElementById("area_transcripcio").innerText;
+   socket.emit('next', {'text':text});
 };
 document.getElementById('bt_play_audio').onclick = function() {
    socket.emit('play_audio');

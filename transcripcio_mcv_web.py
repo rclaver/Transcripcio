@@ -31,7 +31,7 @@ dir_templates = "templates"
 #arxiu de configuració: conté les dades de la darrera execució
 cfg_file = f"{base_dir}/transcripcio.cfg"
 
-dataset_file_path = ""
+dataset_file = ""
 audio_file_path = ""
 audio_file = ""
 audio_actiu = ""
@@ -86,7 +86,7 @@ Desa a l'arxiu de configuració les dades de la darrera execució:
 """
 def desa_configuracio():
    try:
-      cfg = "{" + "'line':" + str(line) + ",'file':'" + dataset_file_path.get() +"'}"
+      cfg = "{" + "'line':" + str(line) + ",'file':'" + dataset_file.filename +"'}"
       with open(cfg_file, 'w', encoding='utf-8') as file:
          file.write(cfg)
    except Exception as e:
@@ -110,33 +110,25 @@ def crear_app():
 
    @app.route("/transcripcio", methods = ["GET", "POST"])
    def upload_mcv_file():
-      global dataset_file_path, selected_language, line
+      global dataset_file, selected_language, line
       if request.method == "POST":
-         arxiu_dataset = request.files['arxiu_dataset']
-         dataset_file_path = arxiu_dataset.filename
+         dataset_file = request.files['arxiu_dataset']
          idioma = request.form.get("seleccio_idioma")
          if idioma:
             selected_language = idioma
 
-      if arxiu_dataset:
-         print(f"{CB_YLW}arxiu_dataset:{C_NONE} {arxiu_dataset.filename}.")
-         return render_template("transcripcio.tpl", arxiu=arxiu_dataset.filename, idioma=languages[idioma])
+      if dataset_file:
+         print(f"{CB_YLW}arxiu_dataset:{C_NONE} {dataset_file}.")
+         print(f"{CB_YLW}arxiu_dataset:{C_NONE} {dataset_file.filename}.")
+         return render_template("transcripcio.tpl", arxiu=dataset_file.filename, idioma=languages[idioma])
       else:
          return render_template("index.tpl")
 
-      # verificació de la recuperació de l'estat anterior (últim registre processat)
-      if not old_file or dataset_file_path.get() != old_file:
-         line = 0
-
-      # Executar en un fil separat per a no bloquejar l'interfase
-      thread = threading.Thread(target=processar_dataset)
-      thread.daemon = True
-      thread.start()
 
    def processar_dataset():
-      global line, transcripcio, dataset_file_path, audio_file_path
+      global espera, line, transcripcio, dataset_file, audio_file_path
       try:
-         contingut = dataset_file_path.read().decode('utf-8')
+         contingut = dataset_file.read().decode('utf-8')
          linies = contingut.splitlines()
 
          for n_rec, registre in enumerate(linies, line):
@@ -148,7 +140,7 @@ def crear_app():
             # mira si transcription està buit
             transcripcio = registre.split("\t")[6]
             arxiu = registre.split("\t")[2]
-            audio_file_path = os.path.dirname(dataset_file_path) + "/audios/" + arxiu
+            audio_file_path = os.path.dirname(dataset_file) + "/audios/" + arxiu
             audio_file.set(arxiu)
             audio_actiu.set("("+str(line)+") "+audio_file.get())
             #text_area.delete(1.0, tk.END)
@@ -164,9 +156,8 @@ def crear_app():
    """
    Permet saltar a l'àudio següent. Prèviament desa, si existeix, el registre actual
    """
-   """
-   def next_audio():
-      text = text_area.get(1.0, tk.END).strip()
+   def next_audio(text):
+      global espera, nou_registre
       if text:
          if genera_registre(registre, text):
             #Ahora hay que guardar (append) el registro en un nuevo archivo
@@ -174,9 +165,9 @@ def crear_app():
 
       # desbloquea el bucle para pasar al siguiente registro
       espera = False
-   """
 
    def genera_registre(reg, text):
+      global nou_registre
       nou_registre = reg.split("\t")
       nou_registre[6] = text
       if not nou_registre[9]:
@@ -300,23 +291,23 @@ def crear_app():
 
    """Neteja tota l'interfase"""
    def clear_all():
-      global dataset_file_path, nou_registre
-      dataset_file_path = ""
+      global dataset_file, nou_registre
+      dataset_file = ""
       #text_area.delete(1.0, tk.END)
       nou_registre = None
       stop_audio()
       status_text.set(default_state)
 
    """Desa el registre en l'arxiu de sortida"""
-   """
    def save_record(self, nou_registre=None):
-      if not nou_registre:
-         text = text_area.get(1.0, tk.END).strip()
-         if genera_registre(registre, text):
-            nou_registre = list_to_tsv(nou_registre)
+      global espera
+      #if not nou_registre:
+      #   text = text_area.get(1.0, tk.END).strip()
+      #   if genera_registre(registre, text):
+      #      nou_registre = list_to_tsv(nou_registre)
 
       if nou_registre:
-         file_path = dataset_file_path.get().replace("-corpus-", "-reported-audios-")
+         file_path = dataset_file.replace("-corpus-", "-reported-audios-")
 
          try:
             with open(file_path, 'a', encoding='utf-8') as file:
@@ -329,17 +320,29 @@ def crear_app():
       else:
          status_text.set("no hi ha text")
 
-   """
-
 
    # Esdeveniment que es dispara quan un client es connecta
    @socketio.on('connect')
    def handle_connect():
       print(f"{CB_YLW}Client connectat{C_NONE}")
 
+   @socketio.on('start')
+   def handle_start():
+      global line, old_file, dataset_file
+      print(f"{CB_YLW}START{C_NONE}")
+      # verificació de la recuperació de l'estat anterior (últim registre processat)
+      if not old_file or dataset_file != old_file:
+         line = 0
+
+      # Executar en un fil separat per a no bloquejar l'interfase
+      thread = threading.Thread(target=processar_dataset)
+      thread.daemon = True
+      thread.start()
+
+
    # Iniciamos la lectura del archivo en un hilo separado para no bloquear el servidor
    @socketio.on('next')
-   def handle_start():
+   def handle_next(text):
       global fil, estat, stop
       print(f"{CB_YLW}botó següent{C_NONE}")
       estat = "next"
@@ -386,4 +389,3 @@ if __name__ == "__main__":
    así, se activa el reconocimento de las aplicaciones Python en el puerto 5000 de localhost
    '''
    app.run(host='localhost', port=5000, debug=False)
-
