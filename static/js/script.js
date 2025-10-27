@@ -36,13 +36,6 @@ function formulari() {
    seleccioArxiu();
 }
 
-function updateFileNameDisplay() {
-  const curFiles = input.files;
-  if (curFiles.length != 0) {
-    document.getElementById("arxiu_actual").innerHTML = curFiles;
-  }
-}
-
 const fileTypes = [
   "text/tab-separated-values",
   "text/tsv",
@@ -51,6 +44,13 @@ const fileTypes = [
 
 function validFileType(file) {
   return fileTypes.includes(file.type);
+}
+
+function updateFileNameDisplay() {
+  const curFiles = input.files;
+  if (curFiles.length != 0) {
+    document.getElementById("arxiu_actual").innerHTML = curFiles;
+  }
 }
 
 /* --------------------------------

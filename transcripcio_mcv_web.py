@@ -32,11 +32,17 @@ dir_templates = "templates"
 cfg_file = f"{base_dir}/transcripcio.cfg"
 
 dataset_file = ""
+registres = ""
 audio_file_path = ""
 audio_file = ""
 audio_actiu = ""
 transcription_text = ""
 selected_language = "ca-ES"  # Idioma per defecte
+languages = {
+   "ca-ES": "Català",
+   "es-ES": "Español",
+   "en-US": "English"
+}
 attr_gender = ""
 registre = ""
 nou_registre = None
@@ -48,11 +54,6 @@ espera = True
 is_playing = False
 default_state = "Selecciona el conjunt de dades de Mozilla Common Voice"
 status_text = default_state
-languages = {
-   "ca-ES": "Català",
-   "es-ES": "Español",
-   "en-US": "English"
-}
 
 # -------------------
 # Auxiliary functions
@@ -110,7 +111,7 @@ def crear_app():
 
    @app.route("/transcripcio", methods = ["GET", "POST"])
    def upload_mcv_file():
-      global dataset_file, selected_language, line
+      global dataset_file, registres, selected_language
       if request.method == "POST":
          dataset_file = request.files['arxiu_dataset']
          idioma = request.form.get("seleccio_idioma")
@@ -119,17 +120,17 @@ def crear_app():
 
       if dataset_file:
          print(f"{CB_YLW}arxiu_dataset:{C_NONE} {dataset_file}.")
-         print(f"{CB_YLW}arxiu_dataset:{C_NONE} {dataset_file.filename}.")
-         return render_template("transcripcio.tpl", arxiu=dataset_file.filename, idioma=languages[idioma])
+         registres = dataset_file.read().decode('utf-8')
+         dataset_file.seek(0)  # Volver al inicio por si necesitas el objeto file completo
+         return render_template("transcripcio.tpl", arxiu=dataset_file.filename, idioma=languages[selected_language])
       else:
          return render_template("index.tpl")
 
 
    def processar_dataset():
-      global espera, line, transcripcio, dataset_file, audio_file_path
+      global registres, espera, line, transcripcio, dataset_file, audio_file_path, audio_actiu, audio_file
       try:
-         contingut = dataset_file.read().decode('utf-8')
-         linies = contingut.splitlines()
+         linies = registres.splitlines()
 
          for n_rec, registre in enumerate(linies, line):
             line += 1
@@ -137,12 +138,13 @@ def crear_app():
                continue
 
             espera = True
+            fields = registre.split("\t")
             # mira si transcription està buit
-            transcripcio = registre.split("\t")[6]
-            arxiu = registre.split("\t")[2]
-            audio_file_path = os.path.dirname(dataset_file) + "/audios/" + arxiu
-            audio_file.set(arxiu)
-            audio_actiu.set("("+str(line)+") "+audio_file.get())
+            transcripcio = fields[6]
+            arxiu = fields[2]
+            audio_file_path = os.path.dirname(dataset_file.filename) + "/audios/" + arxiu
+            audio_file = arxiu
+            audio_actiu = "("+str(line)+") "+arxiu
             #text_area.delete(1.0, tk.END)
             #text_area.insert(1.0, transcripcio)
             socketio.emit('new_transcription', {'text':transcripcio})
