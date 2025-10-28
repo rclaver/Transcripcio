@@ -7,10 +7,11 @@ var boto = "next";
 // Connectar-se al servidor WebSocket
 const socket = io.connect("http://" + document.domain + ":" + location.port);
 
-// Esdeveniment que es dispara quan el servidor envia una nova línia
-socket.on('new_line', function(data) {
+// Esdeveniment que es dispara quan el servidor envia una informació
+socket.on('information', function(data) {
    estat = (data.estat) ? data.estat : "";
-   document.getElementById("area_transcripcio").innerText = data.frase;
+   document.getElementById("div_info").innerText = data.info;
+   document.getElementById("arxiu_actual").innerText = (data.arxiu_audio) ? data.arxiu_audio : "";
    document.getElementById("div_error").innerText = (data.error) ? data.error : "";
 });
 

@@ -30,6 +30,7 @@
       </div>
       <img id="bt_save" class="invisible" src="{{url_for('static', filename='img/save.png')}}">
       <audio id="audio" autoplay="autoplay" preload="none" type="audio/wav"></audio>
+      <div id="div_info" class="info text"></div>
       <div id="div_error" class="error text"></div>
 
     </div>

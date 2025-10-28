@@ -65,11 +65,19 @@ textarea {
   text-align: left;
   background-color: #f0f8ffA0;
 }
+.text {
+  font-size: 14px;
+  font-weight: normal;
+}
+.info {
+  margin-left: 10px;
+  text-align: left;
+  font-size: 12pt;
+}
 .error {
   /*display: none;
   visibility: hidden;*/
   margin-left: 10px;
-  margin-bottom: 5px;
   text-align: left;
   font-size: 12pt;
   font-style: italic;
@@ -78,10 +86,6 @@ textarea {
 div#div_formulari {
   display: block;
   margin: 4px auto;
-}
-.text {
-  font-size: 14px;
-  font-weight: normal;
 }
 .div_botons {
   display: block;
