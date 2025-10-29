@@ -11,10 +11,10 @@ const socket = io.connect("http://" + document.domain + ":" + location.port);
 socket.on('information', function(data) {
    estat = (data.estat) ? data.estat : "";
    document.getElementById("div_info").innerText = (data.info) ? data.info+estat : "";
+   document.getElementById("div_error").innerText = (data.error) ? data.error : "";
    if (data.arxiu_audio) {
       document.getElementById("arxiu_actual").innerText = data.arxiu_audio
    }
-   document.getElementById("div_error").innerText = (data.error) ? data.error : "";
 });
 
 socket.on('new_transcription', function(data) {
@@ -35,3 +35,8 @@ document.getElementById('bt_stop').onclick = function() {
 document.getElementById('bt_transcripcio').onclick = function() {
    socket.emit('transcripcio');
 };
+document.getElementById('bt_exit').onclick = function() {
+   location.href = '/index';
+   socket.emit('exit');
+};
+

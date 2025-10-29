@@ -14,7 +14,10 @@
     <div class="contenidor">
       <div class="titol">Transcripció d'àudios d'un conjunt de dades Mozilla Common Voice</div>
 
-      <div id="arxiu_actual">{{info_i}} {{info_a}}</div>
+      <div class="bloc_files">
+        <div id="dataset">{{info_i}} {{info_a}}</div>
+        <div id="arxiu_actual"></div>
+      </div>
 
       <div class="bloc">
         <textarea id="area_transcripcio" name="transcripcio" rows="20" cols="89" placeholder="Aquí hauria d'aparèixer la transcripció corresponent del dataset"></textarea>
@@ -30,8 +33,8 @@
           <img id="bt_play_audio" class="imatge" src="{{url_for('static', filename='img/play_audio.png')}}" title="play audio current record">
           <img id="bt_stop" class="imatge" src="{{url_for('static', filename='img/stop.png')}}" title="stop audio playback">
           <img id="bt_transcripcio" class="imatge" src="{{url_for('static', filename='img/transcripcio.png')}}" title="start audio transcription">
-          <img id="bt_clear" class="imatge" src="{{url_for('static', filename='img/clear.png')}}" title="clear all items">
           <img id="bt_save" class="imatge invisible" src="{{url_for('static', filename='img/save.png')}}" title="save record">
+          <img id="bt_exit" class="imatge" src="{{url_for('static', filename='img/exit.png')}}" title="exit">
         </div>
       </div>
 
