@@ -16,22 +16,24 @@
 
       <div id="arxiu_actual">{{info_i}} {{info_a}}</div>
 
-      <!--div id="transcripcio" class="bloc transcripcio text"></div-->
       <div class="bloc">
         <textarea id="area_transcripcio" name="transcripcio" rows="20" cols="89" placeholder="Aquí hauria d'aparèixer la transcripció corresponent del dataset"></textarea>
       </div>
 
-      <div id="div_botons" class="div_botons">
-        <img id="bt_next" class="imatge" src="{{url_for('static', filename='img/next.png')}}" title="next record in dataset">
-        <img id="bt_play_audio" class="imatge" src="{{url_for('static', filename='img/play_audio.png')}}" title="play audio current record">
-        <img id="bt_stop" class="imatge" src="{{url_for('static', filename='img/stop.png')}}" title="stop audio playback">
-        <img id="bt_transcripcio" class="imatge" src="{{url_for('static', filename='img/transcripcio.png')}}" title="start audio transcription">
-        <img id="bt_clear" class="imatge" src="{{url_for('static', filename='img/clear.png')}}" title="clear all items">
+      <div class="activity">
+        <div class="grid_info">
+         <div id="div_info" class="info text"></div>
+         <div id="div_error" class="error text"></div>
+        </div>
+        <div id="grid_buttons" class="div_botons">
+          <img id="bt_next" class="imatge" src="{{url_for('static', filename='img/next.png')}}" title="next record in dataset">
+          <img id="bt_play_audio" class="imatge" src="{{url_for('static', filename='img/play_audio.png')}}" title="play audio current record">
+          <img id="bt_stop" class="imatge" src="{{url_for('static', filename='img/stop.png')}}" title="stop audio playback">
+          <img id="bt_transcripcio" class="imatge" src="{{url_for('static', filename='img/transcripcio.png')}}" title="start audio transcription">
+          <img id="bt_clear" class="imatge" src="{{url_for('static', filename='img/clear.png')}}" title="clear all items">
+          <img id="bt_save" class="imatge invisible" src="{{url_for('static', filename='img/save.png')}}" title="save record">
+        </div>
       </div>
-      <img id="bt_save" class="invisible" src="{{url_for('static', filename='img/save.png')}}">
-      <audio id="audio" autoplay="autoplay" preload="none" type="audio/wav"></audio>
-      <div id="div_info" class="info text"></div>
-      <div id="div_error" class="error text"></div>
 
     </div>
   </div>

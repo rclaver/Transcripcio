@@ -17,10 +17,6 @@ body {
   margin:auto;
   max-width: 820px;
 }
-img {
-  vertical-align: sub;
-  margin-left: 5px;
-}
 div .bloc {
   display: block;
   width: 80%;
@@ -87,11 +83,36 @@ div#div_formulari {
   display: block;
   margin: 4px auto;
 }
+.activity {
+  display: grid;
+  grid-template-areas:
+    "info buttons";
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 5px;
+}
+.activity div {
+  background-color: white;
+  padding: 10px;
+}
+.activity div.grid_info {
+  grid-area: info;
+  top: 0;
+}
+.activity div.grid_buttons {
+  grid-area: buttons;
+  top: 0;
+  text-align: right;
+}
 .div_botons {
   display: block;
-  margin-top: 20px;
-  width: 90%;
+  margin-top: 0px;
+  /*width: 90%;*/
   text-align: right;
+}
+img {
+  /*vertical-align: sub;*/
+  margin-left: 5px;
 }
 .imatge {
   width: 32px;
