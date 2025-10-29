@@ -38,7 +38,7 @@ audio_path = "common-voice/audios"
 audio_file_path = ""
 audio_file = ""
 transcription = ""
-transcriptionless = "ATENCIÓ: Aquest registre no conté cap transcripció. Escolta l'àudio i crea una nova transcripció."
+transcriptionless = "ATENCIÓ: Aquest registre no conté cap transcripció. Escolta l'àudio i crea una nova transcripció. Si no s'escolta cap àudio, ignora'l i passa al registre següent."
 selected_language = "ca-ES"  # Idioma per defecte
 languages = {
    "ca-ES": "Català",
@@ -53,7 +53,6 @@ line = 0	#linia actual de l'arxiu del conjunt de dades mcv
 thread = None
 espera = True
 is_playing = False
-channel = None
 default_state = "Selecciona el conjunt de dades de Mozilla Common Voice"
 status_text = default_state
 
@@ -152,7 +151,6 @@ def crear_app():
             arxiu = fields[2]
             duration = int(fields[3])//1000 if fields[3] else 0
             if arxiu:
-               audio_actiu = f"àudio actiu: ({str(line)}) {arxiu}"
                socketio.emit('information', {'arxiu_audio':f"àudio actiu: ({str(line)}) {arxiu}"})
                #audio_file_path = os.path.dirname(dataset_file.filename) + "/audios/" + arxiu
                audio_file_path = f"{audio_path}/{arxiu}"
@@ -192,19 +190,30 @@ def crear_app():
 
    """Reprodueix l'arxiu d'àudio seleccionat"""
    def play_audio():
-      global is_playing, channel
+      global is_playing, duration
       if not audio_file_path:
          is_playing = False
          socketio.emit('information', {'error':"Error: No hi ha cap arxiu d'àudio actiu"})
          return
 
       try:
-         #pygame.mixer.music.load(audio_file_path)
-         #pygame.mixer.music.play()
-         sound = pygame.mixer.Sound(audio_file_path)
-         channel = sound.play()
+         pygame.mixer.music.load(audio_file_path)
+         pygame.mixer.music.play()
          is_playing = True
          socketio.emit('information', {'info':"Reproduint àudio..."})
+
+         def check_if_play_audio():
+
+            def temporitzador(temps):
+               global is_playing
+               while temps and is_playing and pygame.mixer.music.get_busy():
+                  time.sleep(1)
+                  socketio.emit('information', {'info':f"playing audio ({temps})"})
+                  temps -=1
+               stop_audio()
+
+            temporitzador(duration)
+
          # Executar en un fil separat per a no bloquejar l'interfase
          fil = threading.Thread(target=check_if_play_audio)
          fil.daemon = True
@@ -213,27 +222,17 @@ def crear_app():
       except Exception as e:
          socketio.emit('information', {'error':f"Error en reproduir l'àudio: {str(e)}"})
 
-   def check_if_play_audio():
-      global is_playing, duration, channel
-      def temporitzador(temps):
-         while temps and is_playing and channel.get_busy():
-            time.sleep(1)
-            socketio.emit('information', {'info':f"playing audio ({temps})"})
-            temps -=1
-         estat = " playing" if channel.get_busy() else " stop"
-         socketio.emit('information', {'info':"Fi de la reproducció de l'àudio.", 'estat':estat})
-         pygame.mixer.music.unload()
-
-      temporitzador(duration)
 
    """Atura la reproducció d'àudio"""
    def stop_audio():
       global is_playing
-      pygame.mixer.music.stop()
+      if pygame.mixer.music.get_busy():
+         pygame.mixer.music.fadeout(100)
+         time.sleep(0.1)
       pygame.mixer.music.unload()
       is_playing = False
       toggle_buttons_state(True)
-      socketio.emit('information', {'info':"Àudio finalitzat", 'estat':"stop"})
+      socketio.emit('information', {'info':"Àudio finalitzat"})
 
    def start_transcription():
       global thread
