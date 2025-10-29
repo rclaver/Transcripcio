@@ -1,6 +1,6 @@
 body {
   font-family: Arial,Sans-serif;
-  font-size: 14px;
+  font-size: 0.85rem;
   background-image: url("../img/mcv820x1200.png");
   background-repeat: no-repeat;
   background-position: center;
@@ -62,20 +62,20 @@ textarea {
   background-color: #f0f8ffA0;
 }
 .text {
-  font-size: 14px;
+  /*font-size: 14px;*/
   font-weight: normal;
 }
 .info {
   margin-left: 10px;
   text-align: left;
-  font-size: 12pt;
+  /*font-size: 10pt;*/
 }
 .error {
   /*display: none;
   visibility: hidden;*/
   margin-left: 10px;
   text-align: left;
-  font-size: 12pt;
+  /*font-size: 10pt;*/
   font-style: italic;
   color: red;
 }

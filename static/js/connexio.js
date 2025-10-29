@@ -18,7 +18,7 @@ socket.on('information', function(data) {
 });
 
 socket.on('new_transcription', function(data) {
-   document.getElementById("area_transcripcio").innerText = data.text;
+   document.getElementById("area_transcripcio").innerHTML = data.text;
    document.getElementById("div_error").innerText = (data.error) ? data.error : "";
 });
 

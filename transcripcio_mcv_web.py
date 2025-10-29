@@ -36,7 +36,6 @@ registres = ""
 duration = 0
 audio_path = "common-voice/audios"
 audio_file_path = ""
-audio_file = ""
 transcription = ""
 transcriptionless = "ATENCIÓ: Aquest registre no conté cap transcripció. Escolta l'àudio i crea una nova transcripció. Si no s'escolta cap àudio, ignora'l i passa al registre següent."
 selected_language = "ca-ES"  # Idioma per defecte
@@ -130,7 +129,7 @@ def crear_app():
 
 
    def processar_dataset():
-      global registres, espera, line, transcription, transcriptionless, duration, audio_path, audio_file_path, audio_file, dataset_file
+      global registres, espera, line, transcription, transcriptionless, duration, audio_path, audio_file_path, dataset_file
       try:
          linies = registres.splitlines()
 
@@ -152,9 +151,7 @@ def crear_app():
             duration = int(fields[3])//1000 if fields[3] else 0
             if arxiu:
                socketio.emit('information', {'arxiu_audio':f"àudio actiu: ({str(line)}) {arxiu}"})
-               #audio_file_path = os.path.dirname(dataset_file.filename) + "/audios/" + arxiu
                audio_file_path = f"{audio_path}/{arxiu}"
-               audio_file = arxiu
                print(f"\t{CB_BLU}audio_file_path: {CB_YLW}{audio_file_path}\n\t{CB_BLU}duration: {CB_YLW}{duration}s{C_NONE}.")
 
             while espera:
@@ -202,24 +199,21 @@ def crear_app():
          is_playing = True
          socketio.emit('information', {'info':"Reproduint àudio..."})
 
-         def check_if_play_audio():
-
-            def temporitzador(temps):
-               global is_playing
-               while temps and is_playing and pygame.mixer.music.get_busy():
-                  time.sleep(1)
-                  socketio.emit('information', {'info':f"playing audio ({temps})"})
-                  temps -=1
-               stop_audio()
-
-            temporitzador(duration)
+         def check_if_play_audio(temps):
+            global is_playing
+            while temps and is_playing and pygame.mixer.music.get_busy():
+               time.sleep(1)
+               socketio.emit('information', {'info':f"Reproduint àudio... ({temps})"})
+               temps -=1
+            stop_audio()
 
          # Executar en un fil separat per a no bloquejar l'interfase
-         fil = threading.Thread(target=check_if_play_audio)
+         fil = threading.Thread(target=check_if_play_audio(duration))
          fil.daemon = True
          fil.start()
 
       except Exception as e:
+         is_playing = False
          socketio.emit('information', {'error':f"Error en reproduir l'àudio: {str(e)}"})
 
 
@@ -257,7 +251,7 @@ def crear_app():
       try:
          # Convertir MP3 a WAV si és necessari
          if audio_file_path.lower().endswith('.mp3'):
-            wav_path = f"{base_dir}/static/tmp/" + os.path.basename(audio_file_path).replace('.mp3', '_temp.wav')
+            wav_path = f"{base_dir}/static/tmp/" + audio_file_path.replace('.mp3', '_temp.wav')
             audio = AudioSegment.from_mp3(audio_file_path)
             audio.export(wav_path, format="wav")
          else:
@@ -298,8 +292,7 @@ def crear_app():
       #if text:
          #text_area.delete(1.0, tk.END)
          #text_area.insert(1.0, text)
-
-      status_text.set(status)
+      socketio.emit('information', {'info':status})
 
    def normalize_gender(gender):
       match gender:
@@ -319,7 +312,7 @@ def crear_app():
       #text_area.delete(1.0, tk.END)
       nou_registre = None
       stop_audio()
-      status_text.set(default_state)
+      socketio.emit('information', {'info':default_state})
 
    """Desa el registre en l'arxiu de sortida"""
    def save_record(self, nou_registre=None):
@@ -335,13 +328,13 @@ def crear_app():
          try:
             with open(file_path, 'a', encoding='utf-8') as file:
                file.write(nou_registre)
-            status_text.set(f"Transcripció desada a: {file_path}")
+            socketio.emit('information', {'info':f"Transcripció desada a: {file_path}"})
             desa_configuracio()
             espera = False
          except Exception as e:
-            status_text.set(f"Error en desar el registre: {str(e)}")
+            socketio.emit('information', {'error':f"Error en desar el registre: {str(e)}"})
       else:
-         status_text.set("no hi ha text")
+         socketio.emit('information', {'error':"No hi ha cap transcripció"})
 
 
    # Esdeveniment que es dispara quan un client es connecta
