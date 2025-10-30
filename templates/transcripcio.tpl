@@ -25,9 +25,18 @@
 
       <div class="activity">
         <div class="grid_info">
-         <div id="div_info" class="info text"></div>
-         <div id="div_error" class="error text"></div>
+          <div id="div_info" class="info text"></div>
+          <div id="div_error" class="error text"></div>
         </div>
+
+        <div class="grid_genre info text">
+          <div class="info text float_left"><span>Gènere de l'àudio</span></div>
+          <div id="div_genre" class="info text float_left">
+            <input type="radio" id="home" name="r_genre" value="HTML"><label for="home">home</label><br>
+            <input type="radio" id="dona" name="r_genre" value="HTML"><label for="dona">dona</label><br>
+          </div>
+        </div>
+
         <div id="grid_buttons" class="div_botons">
           <img id="bt_next" class="imatge" src="{{url_for('static', filename='img/next.png')}}" title="next record in dataset">
           <img id="bt_play_audio" class="imatge" src="{{url_for('static', filename='img/play_audio.png')}}" title="play audio current record">

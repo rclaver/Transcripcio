@@ -18,7 +18,9 @@ socket.on('information', function(data) {
 });
 
 socket.on('new_transcription', function(data) {
-   document.getElementById("area_transcripcio").innerHTML = data.text;
+   var ph = "Aquí hauria d'aparèixer la transcripció corresponent del dataset"
+   document.getElementById("area_transcripcio").innerHTML = (data.text) ? data.text : "";
+   document.getElementById("area_transcripcio").placeholder = (data.placeholder) ? data.placeholder : ph;
    document.getElementById("div_error").innerText = (data.error) ? data.error : "";
 });
 
@@ -40,3 +42,9 @@ document.getElementById('bt_exit').onclick = function() {
    socket.emit('exit');
 };
 
+document.getElementById("div_genre").onclick = function() {
+   let genre = document.querySelector('input[name="r_genre"]:checked');
+   if (genre) {
+      socket.emit('seleccioGenere', {'genre':genre.value});
+   }
+}

@@ -26,16 +26,19 @@ CB_YLW="\033[1;33m"
 CB_BLU="\033[1;34m"
 
 base_dir = "/home/rafael/projectes/Transcripcio"
+# Les rutes son relatives
 dir_static = "static"
 dir_templates = "templates"
-#arxiu de configuració: conté les dades de la darrera execució
-cfg_file = f"{base_dir}/transcripcio.cfg"
+dir_audios = "common-voice/audios"
+cfg_file = f"{base_dir}/transcripcio.cfg" #arxiu de configuració: conté les dades de la darrera execució
+
+old_file = None
+line = 0	#linia actual de l'arxiu del conjunt de dades mcv
 
 dataset_file = ""
+audio_file_path = ""
 registres = ""
 duration = 0
-audio_path = "common-voice/audios"
-audio_file_path = ""
 transcription = ""
 transcriptionless = "ATENCIÓ: Aquest registre no conté cap transcripció. Escolta l'àudio i crea una nova transcripció. Si no s'escolta cap àudio, ignora'l i passa al registre següent."
 selected_language = "ca-ES"  # Idioma per defecte
@@ -45,10 +48,8 @@ languages = {
    "en-US": "English"
 }
 attr_gender = ""
-registre = ""
+registre_actual = ""
 nou_registre = None
-old_file = None
-line = 0	#linia actual de l'arxiu del conjunt de dades mcv
 thread = None
 espera = True
 is_playing = False
@@ -66,10 +67,10 @@ def crear_app():
    # Auxiliary functions
    #
 
-   # Llegeix de l'arxiu de configuració les dades de la darrera execució:
-   # - la ruta de l'arxiu del conjunt de dades
-   # - la darrera línia precessada de l'arxiu del conjunt de dades
    def carrega_configuracio():
+      # Llegeix de l'arxiu de configuració les dades de la darrera execució:
+      # - la ruta de l'arxiu del conjunt de dades
+      # - la darrera línia precessada de l'arxiu del conjunt de dades
       global line, old_file
       try:
          with open(cfg_file, 'r', encoding='utf-8') as file:
@@ -82,10 +83,10 @@ def crear_app():
          if (e.errno != 2): #file not found
             socketio.emit('information', {'error':f"Error en llegir l'arxiu de configuració: {str(e)}"})
 
-   # Desa a l'arxiu de configuració les dades de la darrera execució:
-   # - la ruta de l'arxiu del conjunt de dades
-   # - la darrera línia precessada de l'arxiu del conjunt de dades
    def desa_configuracio():
+      # Desa a l'arxiu de configuració les dades de la darrera execució:
+      # - la ruta de l'arxiu del conjunt de dades
+      # - la darrera línia precessada de l'arxiu del conjunt de dades
       try:
          cfg = "{" + "'line':" + str(line) + ",'file':'" + dataset_file.filename +"'}"
          with open(cfg_file, 'w', encoding='utf-8') as file:
@@ -98,12 +99,12 @@ def crear_app():
          case "home": return "male_masculine"
          case "dona": return "female_feminine"
 
-   # Habilita o deshabilita botons durant la transcripció
    def toggle_buttons_state(enabled):
+      # Habilita o deshabilita botons durant la transcripció
       pass
 
-   # Converteix una llista en un string separat per tabulador
    def list_to_tsv(reg):
+      # Converteix una llista en un string separat per tabulador
       return '\t'.join(str(x) for x in reg)
 
    pygame.mixer.init(11025)  # raises exception on fail
@@ -137,62 +138,71 @@ def crear_app():
    # Process functions
    #
    def processar_dataset():
-      global registres, espera, line, transcription, transcriptionless, duration, audio_path, audio_file_path, dataset_file
+      global registres, registre_actual
+      global espera, line
+      global transcription, transcriptionless, duration
+      global dir_audios, audio_file_path
       try:
          linies = registres.splitlines()
 
-         for n_rec, registre in enumerate(linies, line):
+         for n, registre_actual in enumerate(linies, line):
             line += 1
             if line == 1:
                continue
-            print(f"{CB_YLW}processar_dataset():\n\t{CB_BLU}line:{CB_YLW}{line}\n\t{CB_BLU}registre: {C_NONE}{registre}.")
+            print(f"{CB_YLW}processar_dataset():\n\t{CB_BLU}line:{CB_YLW}{line}\n\t{CB_BLU}registre_actual: {C_NONE}{registre_actual}.")
 
             espera = True
-            fields = registre.split("\t")
-            # mira si transcription està buit
-            transcription = fields[6]
-            if transcription:
-               socketio.emit('new_transcription', {'text':transcription})
-            else:
-               socketio.emit('new_transcription', {'text':transcriptionless})
+            fields = registre_actual.split("\t")
             arxiu = fields[2]
-            duration = int(fields[3])//1000 if fields[3] else 0
             if arxiu:
+               transcription = fields[6]
+               if transcription:
+                  socketio.emit('new_transcription', {'text':transcription})
+               else:
+                  socketio.emit('new_transcription', {'placeholder':transcriptionless})
+                  duration = int(fields[3])//1000 if fields[3] else 0
+
                socketio.emit('information', {'arxiu_audio':f"àudio actiu: ({str(line)}) {arxiu}"})
-               audio_file_path = f"{audio_path}/{arxiu}"
+               audio_file_path = f"{dir_audios}/{arxiu}"
                print(f"\t{CB_BLU}audio_file_path: {CB_YLW}{audio_file_path}\n\t{CB_BLU}duration: {CB_YLW}{duration}s{C_NONE}.")
+            else:
+               espera = False
+               continue
 
             while espera:
                pass
 
       except Exception as e:
-         socketio.emit('information', {'error':f"Error llegint l'arxiu: {str(e)}"})
+         socketio.emit('information', {'error':f"Error processant el dataset: {str(e)}"})
 
-   # Permet saltar a l'àudio següent. Prèviament desa, si existeix, el registre actual
    def next_audio(text):
-      global espera, nou_registre
+      # Salta a l'àudio següent. Prèviament desa el registre actual
+      global espera, thread
       if text:
-         if genera_registre(registre, text):
-            #Ahora hay que guardar (append) el registro en un nuevo archivo
-            save_record(list_to_tsv(nou_registre))
+         new_rec = genera_registre(text)
+         if new_rec:
+            save_record(list_to_tsv(new_rec))
 
       # desbloquea el bucle para pasar al siguiente registro
-      espera = False
+      if not thread or not thread.is_alive():
+         espera = False
+      else:
+         print(f"{CB_BLU}\tfil.is_alive{C_NONE}")
 
-   def genera_registre(reg, text):
-      global nou_registre
-      nou_registre = reg.split("\t")
-      nou_registre[6] = text
-      if not nou_registre[9]:
+   def genera_registre(text):
+      global registre_actual, attr_gender
+      new_rec = registre_actual.split("\t")
+      new_rec[6] = text
+      if not new_rec[9]:
          if attr_gender:
-            nou_registre[9] = normalize_gender(attr_gender)
+            new_rec[9] = normalize_gender(attr_gender)
          else:
             socketio.emit('information', {'error':"No has seleccionat l'atribut de gènere de l'àudio"})
-            return False
-      return True
+            return None
+      return new_rec
 
-   # Reprodueix l'arxiu d'àudio seleccionat
    def play_audio():
+      # Reprodueix l'arxiu d'àudio seleccionat
       global is_playing, duration
       if not audio_file_path:
          is_playing = False
@@ -213,7 +223,7 @@ def crear_app():
                temps -=1
             stop_audio()
 
-         # Executar en un fil separat per a no bloquejar l'interfase
+         # executar en un fil separat per a no bloquejar l'interfase
          fil = threading.Thread(target=check_if_play_audio(duration))
          fil.daemon = True
          fil.start()
@@ -222,8 +232,8 @@ def crear_app():
          is_playing = False
          socketio.emit('information', {'error':f"Error en reproduir l'àudio: {str(e)}"})
 
-   # Atura la reproducció d'àudio
    def stop_audio():
+      # Atura la reproducció d'àudio
       global is_playing
       if pygame.mixer.music.get_busy():
          pygame.mixer.music.fadeout(100)
@@ -243,14 +253,14 @@ def crear_app():
       toggle_buttons_state(False)
       socketio.emit('information', {'info':"Transcribint l'àudio... pot trigar una estona.", 'estat':"transcripcio"})
 
-      # Executar en un fil separat per a no bloquejar l'interfase
+      # executar en un fil separat per a no bloquejar l'interfase
       if not thread or not thread.is_alive():
          thread = threading.Thread(target=transcribe_audio)
          thread.daemon = True
          thread.start()
 
-   # Converteix l'arxiu d'àudio a text utilitzant SpeechRecognition
    def transcribe_audio():
+      # Converteix l'arxiu d'àudio a text utilitzant SpeechRecognition
       try:
          # Convertir MP3 a WAV si és necessari
          if audio_file_path.lower().endswith('.mp3'):
@@ -275,7 +285,7 @@ def crear_app():
          # to use another API key, use `r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")`
          text = recognizer.recognize_google(audio_data, language=f"{selected_language}")
 
-         # Actualitzar l'interfase en el fil principal
+         # actualitzar l'interfase en el fil principal
          update_transcription(text, "Transcripció completada amb éxit", "")
 
       except sr.UnknownValueError:
@@ -289,8 +299,8 @@ def crear_app():
          if audio_file_path.lower().endswith('.mp3') and os.path.exists(wav_path):
             os.remove(wav_path)
 
-   # Actualitza l'interfase amb el resultat de la transcripció
    def update_transcription(text, status, error):
+      # Actualitza l'interfase amb el resultat de la transcripció
       toggle_buttons_state(True)
       if text:
          socketio.emit('new_transcription', {'text':text})
@@ -300,8 +310,8 @@ def crear_app():
       else:
          socketio.emit('information', {'error':"No hi ha text transcrit"})
 
-   # Desa el registre en l'arxiu de sortida
    def save_record(nou_registre=None):
+      # Desa el registre en l'arxiu de sortida (append)
       global espera
       #if not nou_registre:
       #   text = text_area.get(1.0, tk.END).strip()
@@ -350,22 +360,21 @@ def crear_app():
       thread.daemon = True
       thread.start()
 
+   @socketio.on('seleccioGenere')
+   def handle_genre(g):
+      global attr_gender
+      print(f"{CB_YLW}seleccio de gènere{C_NONE}")
+      attr_gender = g
+
    @socketio.on('next')
    def handle_next(text):
-      global estat, espera, thread
       print(f"{CB_YLW}botó següent{C_NONE}")
-      estat = "next"
-      if not thread or not thread.is_alive():
-         espera = False
-      else:
-         print(f"{CB_BLU}\tfil.is_alive{C_NONE}")
+      next_audio(text)
 
    @socketio.on('play_audio')
    def handle_play_audio():
-      global thread, estat, stop
+      global thread
       print(f"{CB_YLW}botó play_audio{C_NONE}")
-      estat = "play"
-      stop = False
       if not thread or not thread.is_alive():
          thread = threading.Thread(target=play_audio)
          thread.start()
@@ -374,22 +383,22 @@ def crear_app():
 
    @socketio.on('stop')
    def handle_stop():
-      global estat, stop
       print(f"{CB_YLW}botó stop{C_NONE}")
-      estat = "stop"
-      stop = True
       stop_audio()
 
    @socketio.on('transcripcio')
    def handle_transcripcio():
-      global thread, estat, stop
+      global thread
       print(f"{CB_YLW}botó transcripcio{C_NONE}")
-      estat = "transcripcio"
-      stop = False
       if not thread or not thread.is_alive():
          start_transcription()
       else:
          print(f"{CB_BLU}\tfil.is_alive{C_NONE}")
+
+   @socketio.on('save')
+   def handle_save():
+      print(f"{CB_YLW}botó save{C_NONE}")
+      save_record()
 
    @socketio.on('exit')
    def handle_exit():
