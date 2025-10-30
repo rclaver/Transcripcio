@@ -41,6 +41,10 @@ document.getElementById('bt_exit').onclick = function() {
    location.href = '/index';
    socket.emit('exit');
 };
+document.getElementById('bt_save').onclick = function() {
+   var text = document.getElementById("area_transcripcio").innerText;
+   socket.emit('save', {'text':text});
+};
 
 document.getElementById("div_genre").onclick = function() {
    let genre = document.querySelector('input[name="r_genre"]:checked');

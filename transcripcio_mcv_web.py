@@ -178,28 +178,31 @@ def crear_app():
    def next_audio(text):
       # Salta a l'àudio següent. Prèviament desa el registre actual
       global espera, thread
-      if text:
-         new_rec = genera_registre(text)
-         if new_rec:
-            save_record(list_to_tsv(new_rec))
-
-      # desbloquea el bucle para pasar al siguiente registro
-      if not thread or not thread.is_alive():
-         espera = False
-      else:
-         print(f"{CB_BLU}\tfil.is_alive{C_NONE}")
+      if save_record(text):
+         # desbloquea el bucle para pasar al siguiente registro
+         if not thread or not thread.is_alive():
+            espera = False
+         else:
+            print(f"{CB_BLU}\tthread.is_alive{C_NONE}")
+            socketio.emit('information', {'error':"thread.is_alive"})
 
    def genera_registre(text):
       global registre_actual, attr_gender
-      new_rec = registre_actual.split("\t")
-      new_rec[6] = text
-      if not new_rec[9]:
-         if attr_gender:
-            new_rec[9] = normalize_gender(attr_gender)
+      cont = True if (text) else False
+      if text:
+         new_rec = registre_actual.split("\t")
+         new_rec[6] = text
+         cont = True if (new_rec[9]) else False
+         if not new_rec[9]:
+            if attr_gender:
+               new_rec[9] = normalize_gender(attr_gender)
+               cont = True
+            else:
+               socketio.emit('information', {'error':"No has seleccionat l'atribut de gènere de l'àudio"})
          else:
-            socketio.emit('information', {'error':"No has seleccionat l'atribut de gènere de l'àudio"})
-            return None
-      return new_rec
+            socketio.emit('information', {'error':"No hi ha cap text transcrit"})
+
+      return list_to_tsv(new_rec) if cont else False
 
    def play_audio():
       # Reprodueix l'arxiu d'àudio seleccionat
@@ -310,13 +313,10 @@ def crear_app():
       else:
          socketio.emit('information', {'error':"No hi ha text transcrit"})
 
-   def save_record(nou_registre=None):
+   def save_record(text):
       # Desa el registre en l'arxiu de sortida (append)
       global espera
-      #if not nou_registre:
-      #   text = text_area.get(1.0, tk.END).strip()
-      #   if genera_registre(registre, text):
-      #      nou_registre = list_to_tsv(nou_registre)
+      nou_registre = genera_registre(text)
 
       if nou_registre:
          file_path = dataset_file.replace("-corpus-", "-reported-audios-")
@@ -327,10 +327,13 @@ def crear_app():
             socketio.emit('information', {'info':f"Transcripció desada a: {file_path}"})
             desa_configuracio()
             espera = False
+            return True
          except Exception as e:
             socketio.emit('information', {'error':f"Error en desar el registre: {str(e)}"})
       else:
          socketio.emit('information', {'error':"No hi ha cap transcripció"})
+
+      return False
 
    # Retorna a l'inici
    def sortir():
@@ -396,9 +399,9 @@ def crear_app():
          print(f"{CB_BLU}\tfil.is_alive{C_NONE}")
 
    @socketio.on('save')
-   def handle_save():
+   def handle_save(text):
       print(f"{CB_YLW}botó save{C_NONE}")
-      save_record()
+      save_record(text)
 
    @socketio.on('exit')
    def handle_exit():
