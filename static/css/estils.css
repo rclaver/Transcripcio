@@ -90,7 +90,6 @@ div#div_formulari {
   grid-template-columns: 1fr auto 1fr;
   column-gap: 3px;
   padding: 5px;
-  border: 1px red;
 }
 .activity div {
   background-color: white;
@@ -98,25 +97,24 @@ div#div_formulari {
 }
 .activity div.grid_info {
   grid-area: info;
+  border: 1px solid red;
 }
 .activity div.grid_genre {
   grid-area: genre;
-  padding: 0;
+  border: 1px solid red;
 }
 .activity div.grid_buttons {
   grid-area: buttons;
-  top: 0;
-  text-align: right;
-}
-.div_botons {
-  display: block;
-  margin-top: 0px;
-  /*width: 90%;*/
-  text-align: right;
+  border: 1px solid red;
+  text-align: center;
 }
 .float_left {
   float: left;
-  padding_left: 5px;
+  padding-left: 2px;
+  margin-left: 2px;
+}
+.bold {
+  font-weight: bold;
 }
 img {
   margin-left: 5px;
@@ -127,4 +125,7 @@ img {
 }
 .invisible {
   width: 1px;
+}
+p#dialog_box {
+   display: hidden;
 }

@@ -30,14 +30,14 @@
         </div>
 
         <div class="grid_genre info text">
-          <div class="info text float_left"><span>Gènere de l'àudio</span></div>
+          <div class="info bold float_left"><span>Gènere de l'àudio</span></div>
           <div id="div_genre" class="info text float_left">
             <input type="radio" id="home" name="r_genre" value="HTML"><label for="home">home</label><br>
             <input type="radio" id="dona" name="r_genre" value="HTML"><label for="dona">dona</label><br>
           </div>
         </div>
 
-        <div id="grid_buttons" class="div_botons">
+        <div class="grid_buttons">
           <img id="bt_next" class="imatge" src="{{url_for('static', filename='img/next.png')}}" title="next record in dataset">
           <img id="bt_play_audio" class="imatge" src="{{url_for('static', filename='img/play_audio.png')}}" title="play audio current record">
           <img id="bt_stop" class="imatge" src="{{url_for('static', filename='img/stop.png')}}" title="stop audio playback">
@@ -49,6 +49,16 @@
 
     </div>
   </div>
+
+  <dialog id="question">
+    <form method="dialog">
+      <p id="dialog_box"></p>
+      <div>
+        <button id="cancel" type="reset">Cancel</button>
+        <button type="submit">Confirm</button>
+      </div>
+    </form>
+  </dialog>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {

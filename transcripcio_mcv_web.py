@@ -49,7 +49,6 @@ languages = {
 }
 attr_gender = ""
 registre_actual = ""
-nou_registre = None
 thread = None
 espera = True
 is_playing = False
@@ -178,13 +177,14 @@ def crear_app():
    def next_audio(text):
       # Salta a l'àudio següent. Prèviament desa el registre actual
       global espera, thread
-      if save_record(text):
-         # desbloquea el bucle para pasar al siguiente registro
-         if not thread or not thread.is_alive():
-            espera = False
-         else:
-            print(f"{CB_BLU}\tthread.is_alive{C_NONE}")
-            socketio.emit('information', {'error':"thread.is_alive"})
+      #if save_record(text):
+      save_record(text)
+      # desbloquea el bucle para pasar al siguiente registro
+      if not thread or not thread.is_alive():
+         espera = False
+      else:
+         print(f"{CB_BLU}\tthread.is_alive{C_NONE}")
+         socketio.emit('information', {'error':"thread.is_alive"})
 
    def genera_registre(text):
       global registre_actual, attr_gender
@@ -337,9 +337,8 @@ def crear_app():
 
    # Retorna a l'inici
    def sortir():
-      global dataset_file, nou_registre
+      global dataset_file
       dataset_file = ""
-      nou_registre = None
       stop_audio()
 
 # -------------
