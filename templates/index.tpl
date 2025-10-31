@@ -1,7 +1,7 @@
 {% include "head.tpl" %}
 </head>
 
-<body bgcolor="#FFFFFF">
+<body>
   <div>
     <div class="contenidor">
       <div class="titol">Transcripció d'àudios d'un conjunt de dades Mozilla Common Voice</div>
@@ -21,11 +21,10 @@
         <div class="bloc">
           <label for="id_arxiu_dataset">Selecciona l'arxiu del dataset</label>
           <input type="file" id="id_arxiu_dataset" name="arxiu_dataset" accept="text/csv,.tsv" required>
-          <!--button type="submit">Acceptar</button-->
+          <span id="arxiu_actual">Selecciona un arxiu</span>
         </div>
       </form>
 
-      <div id="arxiu_actual">Selecciona un arxiu del conjunt de dades</div>
     </div>
   </div>
 

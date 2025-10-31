@@ -2,7 +2,7 @@
   <!--script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js"></script-->
   <script src="/static/js/socket-io.js"></script>
 </head>
-<body bgcolor="#FFFFFF">
+<body>
   {% if idioma is defined %}
      {% set info_i = "idioma: " ~ idioma %}
   {% endif %}
@@ -29,9 +29,9 @@
           <div id="div_error" class="error text"></div>
         </div>
 
-        <div class="grid_genre info text">
+        <div class="grid_genre text">
           <div class="info bold float_left"><span>Gènere de l'àudio</span></div>
-          <div id="div_genre" class="info text float_left">
+          <div id="div_genre" class="text float_left">
             <input type="radio" id="home" name="r_genre" value="HTML"><label for="home">home</label><br>
             <input type="radio" id="dona" name="r_genre" value="HTML"><label for="dona">dona</label><br>
           </div>

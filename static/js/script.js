@@ -1,11 +1,15 @@
 var idioma, arxiu;
 var resposta = document.getElementById("arxiu_actual");
-document.getElementById("id_arxiu_dataset").addEventListener("change", seleccioArxiu);
+var arxiu_dataset = document.getElementById("id_arxiu_dataset");
+arxiu_dataset.validity.valueMissing = false;
+arxiu_dataset.validationMessage = "Selecciona un arxiu del conjunt de dades";
+arxiu_dataset.addEventListener("change", seleccioArxiu);
 document.getElementById("id_seleccio_idioma").addEventListener("change", seleccioIdioma);
 
 function seleccioArxiu() {
   var input = document.querySelector("input");
   arxiu = input.files[0];
+  var filepath = input.files[0].webkitRelativePath;
   resposta.innerHTML = arxiu.name;
   retornFormulari();
 }
@@ -45,4 +49,3 @@ const fileTypes = [
 function validFileType(file) {
   return fileTypes.includes(file.type);
 }
-

@@ -1,7 +1,6 @@
 /***
  Gestiona la comunicació entre el servidor i el client
 */
-var estat;
 var boto = "next";
 
 // Connectar-se al servidor WebSocket
@@ -9,8 +8,7 @@ const socket = io.connect("http://" + document.domain + ":" + location.port);
 
 // Esdeveniment que es dispara quan el servidor envia una informació
 socket.on('information', function(data) {
-   estat = (data.estat) ? data.estat : "";
-   document.getElementById("div_info").innerText = (data.info) ? data.info+estat : "";
+   document.getElementById("div_info").innerText = (data.info) ? data.info : "";
    document.getElementById("div_error").innerText = (data.error) ? data.error : "";
    if (data.arxiu_audio) {
       document.getElementById("arxiu_actual").innerText = data.arxiu_audio

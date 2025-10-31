@@ -1,7 +1,8 @@
 body {
   font-family: Arial,Sans-serif;
   font-size: 0.85rem;
-  background-image: url("../img/mcv820x1200.png");
+  background-color: #FFFFFF;
+  background-image: url("../img/mcv820x800.png");
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -69,13 +70,14 @@ textarea {
   font-weight: normal;
 }
 .info {
-  margin-left: 10px;
   text-align: left;
+}
+.bold {
+  font-weight: bold;
 }
 .error {
   /*display: none;
   visibility: hidden;*/
-  margin-left: 10px;
   text-align: left;
   font-style: italic;
   color: red;
@@ -113,9 +115,6 @@ div#div_formulari {
   padding-left: 2px;
   margin-left: 2px;
 }
-.bold {
-  font-weight: bold;
-}
 img {
   margin-left: 5px;
 }
@@ -124,8 +123,8 @@ img {
   margin-left: 10px;
 }
 .invisible {
-  width: 1px;
+  visibility: hidden;
 }
 p#dialog_box {
-   display: hidden;
+   display: none;
 }

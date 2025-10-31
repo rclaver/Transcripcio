@@ -27,7 +27,6 @@ CB_BLU="\033[1;34m"
 
 base_dir = "/home/rafael/projectes/Transcripcio"
 # Les rutes son relatives
-dir_static = "static"
 dir_templates = "templates"
 dir_audios = "common-voice/audios"
 cfg_file = f"{base_dir}/transcripcio.cfg" #arxiu de configuració: conté les dades de la darrera execució
@@ -35,7 +34,7 @@ cfg_file = f"{base_dir}/transcripcio.cfg" #arxiu de configuració: conté les da
 old_file = None
 line = 0	#linia actual de l'arxiu del conjunt de dades mcv
 
-dataset_file = ""
+dataset_file = None
 audio_file_path = ""
 registres = ""
 duration = 0
@@ -148,10 +147,10 @@ def crear_app():
             line += 1
             if line == 1:
                continue
-            print(f"{CB_YLW}processar_dataset():\n\t{CB_BLU}line:{CB_YLW}{line}\n\t{CB_BLU}registre_actual: {C_NONE}{registre_actual}.")
 
             espera = True
             fields = registre_actual.split("\t")
+            print(f"{CB_YLW}processar_dataset():\n\t{CB_BLU}line:{CB_YLW}{line}\n\t{CB_BLU}registre_actual: {C_NONE}{fields[6]}\n\t\t{fields[9]}")
             arxiu = fields[2]
             if arxiu:
                transcription = fields[6]
@@ -254,7 +253,7 @@ def crear_app():
 
       # Deshabilitar botons durant la transcripció
       toggle_buttons_state(False)
-      socketio.emit('information', {'info':"Transcribint l'àudio... pot trigar una estona.", 'estat':"transcripcio"})
+      socketio.emit('information', {'info':"Transcribint l'àudio... pot trigar una estona."})
 
       # executar en un fil separat per a no bloquejar l'interfase
       if not thread or not thread.is_alive():
@@ -263,16 +262,17 @@ def crear_app():
          thread.start()
 
    def transcribe_audio():
+      global thread
       # Converteix l'arxiu d'àudio a text utilitzant SpeechRecognition
       try:
          # Convertir MP3 a WAV si és necessari
          if audio_file_path.lower().endswith('.mp3'):
-            wav_path = f"{base_dir}/static/tmp/" + os.path.basename(audio_file_path).replace('.mp3', '.wav')
+            wav_path = f"{base_dir}/tmp/" + os.path.basename(audio_file_path).replace('.mp3', '.wav')
             audio = AudioSegment.from_mp3(audio_file_path)
             audio.export(wav_path, format="wav")
          else:
             wav_path = audio_file_path
-         #print(f"{CB_YLW}transcribe_audio():\n\t{CB_BLU}audio_file_path: {CB_YLW}{audio_file_path}\n\t{CB_BLU}wav_path: {CB_YLW}{wav_path}{C_NONE}")
+         print(f"{CB_YLW}transcribe_audio():\n\t{CB_BLU}audio_file_path: {CB_YLW}{audio_file_path}\n\t{CB_BLU}wav_path: {CB_YLW}{wav_path}{C_NONE}")
 
          # Inicialitzar reconeixedor
          recognizer = sr.Recognizer()
@@ -289,20 +289,22 @@ def crear_app():
          text = recognizer.recognize_google(audio_data, language=f"{selected_language}")
 
          # actualitzar l'interfase en el fil principal
-         update_transcription(text, "Transcripció completada amb éxit", "")
+         update_transcription_area(text, "Transcripció completada amb éxit", "")
+         if thread.is_alive():
+            print(f"{CB_YLW}thread.is_alive(){C_NONE}")
 
       except sr.UnknownValueError:
-         update_transcription("", "", "Error: No he pogut entendre l'àudio")
+         update_transcription_area("", "", "Error: No he pogut entendre l'àudio")
       except sr.RequestError as e:
-         update_transcription("", "", f"Error en el servei: {str(e)}")
+         update_transcription_area("", "", f"Error en el servei: {str(e)}")
       except Exception as e:
-         update_transcription("", "", f"Error inesperat: {str(e)}")
+         update_transcription_area("", "", f"Error inesperat: {str(e)}")
       finally:
          # eliminar, si existeix, l'arxiu temporal
          if audio_file_path.lower().endswith('.mp3') and os.path.exists(wav_path):
             os.remove(wav_path)
 
-   def update_transcription(text, status, error):
+   def update_transcription_area(text, status, error):
       # Actualitza l'interfase amb el resultat de la transcripció
       toggle_buttons_state(True)
       if text:
@@ -319,7 +321,7 @@ def crear_app():
       nou_registre = genera_registre(text)
 
       if nou_registre:
-         file_path = dataset_file.replace("-corpus-", "-reported-audios-")
+         file_path = dataset_file.filename.replace("-corpus-", "-reported-audios-")
 
          try:
             with open(file_path, 'a', encoding='utf-8') as file:
@@ -338,12 +340,13 @@ def crear_app():
    # Retorna a l'inici
    def sortir():
       global dataset_file
-      dataset_file = ""
+      dataset_file = None
       stop_audio()
 
-# -------------
-# socket events
-#
+   # -------------
+   # socket events
+   #
+
    # Esdeveniment que es dispara quan un client es connecta
    @socketio.on('connect')
    def handle_connect():
@@ -354,7 +357,7 @@ def crear_app():
       global line, old_file, dataset_file
       print(f"{CB_YLW}START{C_NONE}")
       # verificació de la recuperació de l'estat anterior (últim registre processat)
-      if not old_file or dataset_file != old_file:
+      if not old_file or dataset_file.filename != old_file:
          line = 0
 
       # Executar en un fil separat per a no bloquejar l'interfase
