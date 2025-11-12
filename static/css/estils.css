@@ -1,0 +1,148 @@
+body {
+  font-family: Arial,Sans-serif;
+  font-size: 0.85rem;
+  background-color: #FFFFFF;
+  background-image: url("../img/mcv820x800.png");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.titol {
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+.contenidor {
+  display: block;
+  text-align: center;
+  margin:auto;
+  max-width: 820px;
+}
+div .bloc {
+  display: block;
+  width: 80%;
+  text-align: left;
+  margin: 10px auto;
+  padding: 10px 10px;
+  border: 1px solid #A0A0FF;
+  border-radius: 5px;
+}
+div .bloc_files {
+  display: block;
+  width: 78%;
+  text-align: right;
+  margin: 0 auto;
+  color: #5060ff
+}
+input[type='file'] {
+   opacity: 0;
+   width: 5px;
+}
+
+/*form label,*/
+form button {
+  background-color: #cccccc;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px ridge #888888;
+  font-size: 0.8rem;
+  height: auto;
+}
+/*form label:hover,*/
+form button:hover {
+  background-color: #442222;
+  color: white;
+}
+/*form label:active,*/
+form button:active {
+  background-color: #662222;
+  color: white;
+}
+textarea {
+  autocomplete: off;
+}
+.transcripcio {
+  margin-bottom: 10px;
+  min-height: 300px;
+  text-align: left;
+  background-color: #f0f8ffA0;
+}
+.text {
+  font-weight: normal;
+}
+.info {
+  text-align: left;
+}
+.bold {
+  font-weight: bold;
+}
+.error {
+  /*display: none;
+  visibility: hidden;*/
+  text-align: left;
+  font-style: italic;
+  color: red;
+}
+div#div_formulari {
+  display: block;
+  margin: 4px auto;
+}
+.activity {
+  display: grid;
+  grid-template-areas: "info gender buttons";
+  grid-template-columns: 1fr auto 1fr;
+  column-gap: 3px;
+  padding: 5px;
+}
+.activity div {
+  background-color: white;
+  padding: 5px;
+}
+.activity div.grid_info {
+  grid-area: info;
+  border: 1px solid #b0b0ff;
+  border-radius: 5px;
+}
+.activity div.grid_gender {
+  grid-area: gender;
+  border: 1px solid #b0b0ff;
+  border-radius: 5px;
+}
+.activity div.grid_buttons {
+  grid-area: buttons;
+  border: 1px solid #b0b0ff;
+  border-radius: 5px;
+  text-align: center;
+  /*background-color: #d4d0c8;*/
+  padding: 5px;
+}
+.float_left {
+  float: left;
+  padding-left: 0 !important;
+  margin-left: 0;
+}
+button[type='submit'] {
+   margin-left: 10px;
+}
+img {
+  margin-left: 0px;
+  width: 32px;
+  vertical-align: sub;
+}
+.imatge {
+  width: 32px;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+.invisible {
+  visibility: hidden;
+}
+dialog#dlg_question {
+  margin: auto;
+  border: 1px solid #A0A0FF;
+  border-radius: 5px;
+  text-align: center;
+}
+p#dlg_text {
+  text-align: left;
+}
