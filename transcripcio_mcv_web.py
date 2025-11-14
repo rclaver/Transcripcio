@@ -109,12 +109,13 @@ def crear_app():
       # Llegeix de l'arxiu de configuració les dades de la darrera execució:
       # - la ruta de l'arxiu del conjunt de dades
       # - la darrera línia precessada de l'arxiu del conjunt de dades
-      global line, old_file
+      global selected_language, line, old_file
       try:
          with open(cfg_file, 'r', encoding='utf-8') as file:
             reg = file.readline().strip("{}").split(",")
          for e in reg:
             match e[0]:
+               case "languaje": selected_language = e[1]
                case "line": line = e[1]-1
                case "file": old_file = e[1]
       except IOError as e:
@@ -125,8 +126,9 @@ def crear_app():
       # Desa a l'arxiu de configuració les dades de la darrera execució:
       # - la ruta de l'arxiu del conjunt de dades
       # - la darrera línia precessada de l'arxiu del conjunt de dades
+      global selected_language, line, dataset_file
       try:
-         cfg = "{" + "'line':" + str(line) + ",'file':'" + dataset_file.filename +"'}"
+         cfg = "{" + "'languaje':'" + selected_language + "'," + "'line':" + str(line) + ",'file':'" + dataset_file.filename +"'}"
          with open(cfg_file, 'w', encoding='utf-8') as file:
             file.write(cfg)
       except Exception as e:

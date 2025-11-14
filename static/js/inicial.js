@@ -21,23 +21,23 @@ function seleccioIdioma() {
    switch (idioma) {
       case "ca-ES":
          document.getElementById("titol").innerHTML = "Transcripció d'àudios d'un conjunt de dades Mozilla Common Voice";
-         document.getElementById("ss_idioma").innerHTML = "Selecció d'idioma: ";
+         document.getElementById("ss_idioma").innerHTML = "Selecció d'idioma ";
          document.getElementsByTagName("label").innerHTML = "Selecciona un arxiu";
-         document.getElementById("sel_arxiu").innerHTML = "Selecciona un arxiu del conjunt de dades:";
+         document.getElementById("sel_arxiu").innerHTML = "Selecciona un arxiu del conjunt de dades";
          //arxiu_dataset.validationMessage = "Selecciona un arxiu del conjunt de dades";
          break;
       case "en-US":
          document.getElementById("titol").innerHTML = "Audio transcription from a Mozilla Common Voice dataset";
-         document.getElementById("ss_idioma").innerHTML = "Languaje selection: ";
+         document.getElementById("ss_idioma").innerHTML = "Languaje selection ";
          document.getElementsByTagName("label").innerHTML = "Select file";
-         document.getElementById("sel_arxiu").innerHTML = "Select dataset file:";
+         document.getElementById("sel_arxiu").innerHTML = "Select dataset file";
          //arxiu_dataset.validationMessage = "Select dataset file";
          break;
       case "es-ES":
          document.getElementById("titol").innerHTML = "Transcripción de audios de un conjunto de datos Mozilla Common Voice";
-         document.getElementById("ss_idioma").innerHTML = "Selección de idioma: ";
+         document.getElementById("ss_idioma").innerHTML = "Selección de idioma ";
          document.getElementsByTagName("label").innerHTML = "Selecciona un archivo";
-         document.getElementById("sel_arxiu").innerHTML = "Selecciona un archivo del conjunto de datos:";
+         document.getElementById("sel_arxiu").innerHTML = "Selecciona un archivo del conjunto de datos";
          //arxiu_dataset.validationMessage = "Selecciona un archivo del conjunto de datos";
          break;
    }

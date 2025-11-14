@@ -58,6 +58,9 @@ form button:active {
   background-color: #662222;
   color: white;
 }
+.gran {
+  font-size: 0.9rem;
+}
 textarea {
   autocomplete: off;
 }
